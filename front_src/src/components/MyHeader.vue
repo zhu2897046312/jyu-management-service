@@ -38,9 +38,25 @@ export default {
       activeDropdown: null,
       isProfileMenuVisible: false,
       menuItems: [
-        { title: '报名申请', options: ['Option 1', 'Option 2'] },
-        { title: '选课', options: ['Option 1', 'Option 2'] },
-        { title: '信息维护', options: ['Option 1', 'Option 2'] },
+        { title: '报名申请', options: ["学籍异动申请", "学生申请交流项目",
+                                      "辅修报名","重修报名",
+                                      "学生证补办申请","学生转专业申请",
+                                      "场地预约申请","考试项目报名",
+                                      "教学项目报名","学生成绩学分认定申请",
+                                      "大学英语免修免考报名","成绩作废申请",
+                                      "补考确认","学科竞赛报名",
+                                      "创新创业报名","学生退书申请",
+                                      "开放性实验项目申请","学士学位申请",
+                                      "学生实习申报"] },
+        { title: '信息维护', options: ["学生监护人让人信息采集", "学生个人信息维护",
+                                  "主修专业确认","个人培养方案",
+                                  "创新创业学分确认","实习过程资料",
+                                  "学生自主报到注册","分流专业确认",
+                                  "专业方向确认"] },
+        { title: '选课', options: ["个人课表查询", "自主选课",
+                                    "筛选结果查询","教材预订",
+                                    "实验选课","实验预约",
+                                    "实习选xiang'm"] },
         { title: '信息查询', options: ['Option 1', 'Option 2'] },
         { title: '教学评价', options: ['Option 1', 'Option 2'] }
       ]
@@ -169,7 +185,8 @@ export default {
 
 .main-nav {
   background-color: #f8f9fa;
-  padding: 10px 20px;
+  padding: 0 100px; /* 去掉内边距 */
+  margin: 0; /* 去掉外边距 */
 }
 
 .main-nav ul {
@@ -181,12 +198,12 @@ export default {
 
 .menu-item {
   position: relative;
-  margin: 0 10px;
+  margin: 0;
 }
 
 button {
-  background-color: #007bff;
-  color: white;
+  background-color: white;
+  color: black;
   border: none;
   padding: 10px 20px;
   cursor: pointer;
@@ -198,16 +215,17 @@ button {
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: #d3d3d3; /* 设置为浅灰色 */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+
 
 .dropdown-icon {
   margin-left: 5px;
   width: 10px;
   height: 10px;
   display: inline-block;
-  border: solid white;
+  border: solid black;
   border-width: 0 2px 2px 0;
   content: "";
   transform: rotate(45deg);
@@ -224,22 +242,29 @@ button:hover {
 
 .dropdown-menu {
   position: absolute;
-  top: 100%;
-  right: 0;
+  top: 100%; /* 使下拉菜单出现在按钮的正下方 */
+  left: 0; /* 将下拉菜单的左边缘与按钮的左边缘对齐 */
   background-color: #fff;
   border: 1px solid #ddd;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   padding: 10px;
   border-radius: 5px;
   z-index: 1000;
+  display: flex; /* 使用 flexbox 布局 */
+  flex-direction: column; /* 垂直排列子项 */
+  min-width: 150px; /* 设置最小宽度 */
+  /* 如果需要，可以设置固定宽度 */
 }
 
 .dropdown-menu li {
   padding: 8px 12px;
   cursor: pointer;
+  white-space: nowrap; /* 防止文本换行 */
 }
 
 .dropdown-menu li:hover {
   background-color: #f1f1f1;
 }
+
+
 </style>

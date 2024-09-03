@@ -1,28 +1,15 @@
 <template>
   <div class="main-content">
-    <div class="top-section">
-      <div class="left">
-        <el-card>
-          <el-row>
-            <el-col :span="12">
-              <el-avatar :src="studentProfile.picture" size="large"></el-avatar>
-              <div class="student-info">
-                <h2>{{ studentProfile.name }}</h2>
-                <p>{{ studentProfile.class }}</p>
-              </div>
-            </el-col>
-            <el-col :span="12">
-              <Notifications />
-            </el-col>
-          </el-row>
-        </el-card>
-        <Schedule />
+    <div class="container">
+      <div class="box">
+        <h2>{{ studentProfile.name }}</h2>
+        <p>{{ studentProfile.class }}</p>
       </div>
-      <Calendar />
-    </div>
-    <div class="bottom-section">
-      <Messages />
-      <Grades />
+      <Notifications class="box"/>
+      <Schedule class="box"/>
+      <Calendar class="box"/>
+      <Messages class="box"/>
+      <Grades class="box"/>
     </div>
   </div>
 </template>
@@ -47,7 +34,7 @@ export default {
       studentProfile: {
         name: '朱佳',
         class: '计算机学院计算机2023班',
-    
+        picture: '/path/to/avatar.jpg' // 头像图片路径
       }
     }
   }
@@ -56,23 +43,24 @@ export default {
 
 <style scoped>
 .main-content {
-  flex-grow: 1;
-  padding: 20px;
-  background-color: #fafafa;
-}
-
-.top-section {
   display: flex;
+  flex-direction: column;
+  height: 100%; /* 确保 main-content 占满其父元素的高度 */
+  overflow: hidden; /* 防止出现滚动条 */
 }
 
-.left {
-  flex: 2;
-  margin-right: 20px;
+.container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 每行两个盒子 */
+  grid-template-rows: repeat(3, auto); /* 三行 */
+  gap: 10px; /* 控制盒子之间的间距 */
+  height: 100%; 
+  overflow: auto; /* 允许内容溢出时出现滚动条 */
 }
 
-.bottom-section {
-  margin-top: 20px;
-  display: flex;
-  justify-content: space-between;
+.box {
+  padding: 10px;
+  border: 1px solid #ddd;
+  box-sizing: border-box; /* 确保 padding 和 border 包含在元素的总宽度和高度中 */
 }
 </style>
