@@ -2,11 +2,10 @@
   <div class="courses-card">
     <h3>课程</h3>
     <ul>
-      <li v-for="(course, index) in courses" :key="index">
-        <span class="weekday">{{ course.weekday }}</span>
-        <span class="time">{{ course.time }}</span>
-        <span class="name">{{ course.name }}</span>
-        <span class="room">{{ course.room }}</span>
+      <li v-for="course in courses" :key="course">
+        <a href="#" class="course-link">
+          <span class="title">{{ course }}</span>
+        </a>
       </li>
     </ul>
   </div>
@@ -18,7 +17,9 @@ import axios from 'axios';
 export default {
   data() {
     return {
-      courses: []
+      courses: [
+        "fdaljfd"
+      ]
     };
   },
   mounted() {

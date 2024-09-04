@@ -4,8 +4,10 @@
     <button>考试</button>
     <ul>
       <li v-for="(grade, index) in grades" :key="index">
-        <span class="course">{{ grade.course }}</span>
-        <span class="score">{{ grade.score }} 分</span>
+        <a href="#">
+          <span class="course">{{ grade.course }}</span>
+          <span class="score">{{ grade.score }} 分</span>
+        </a>
       </li>
     </ul>
   </div>

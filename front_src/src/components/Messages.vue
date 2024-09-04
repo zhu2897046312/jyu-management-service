@@ -3,8 +3,10 @@
     <h3>消息</h3>
     <ul>
       <li v-for="(message, index) in messages" :key="index">
-        <div class="message-content">{{ message.content }}</div>
-        <div class="message-time">{{ message.time }}</div>
+        <a href="#">
+          <span class="message-content">{{ message.content }}</span>
+          <span class="message-time">{{ message.time }}</span>
+        </a>
       </li>
     </ul>
   </div>

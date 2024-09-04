@@ -18,6 +18,24 @@ var (
 	DB_Redis *redis.Client
 )
 
+func init(){
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold: time.Second,
+			LogLevel:      logger.Info,
+			Colorful:      true,
+		},
+	)
+	log.Println(viper.GetString("mysql.dns"))
+
+	db, err := gorm.Open(mysql.Open("root:123456@tcp(127.0.0.1:3306)/jyu?charset=utf8&parseTime=True&loc=Local"),
+		&gorm.Config{Logger: newLogger})
+	if err != nil {
+		panic("failed to connect database")
+	}
+	DB_MySQL = db
+}
 
 func InitConfig(path   string){
 	viper.SetConfigName("app")

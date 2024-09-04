@@ -5,7 +5,7 @@ package models
 
 // 选课信息
 type CourseInformation struct {
-	CourseCode          string  `gorm:"not null;unique"` // 课程代码
+	CourseCode          string  `gorm:"not null;"` // 课程代码
 	AcademicYear        string  // 学年
 	Semester            int     // 学期
 	CourseName          string  // 课程名称
@@ -21,7 +21,7 @@ type CourseInformation struct {
 
 // 成绩信息
 type GradeInformation struct {
-	CourseCode   string  `gorm:"not null;unique"` // 课程代码
+	CourseCode   string  `gorm:"not null;"` // 课程代码
 	Credits      float32 // 学分
 	AcademicYear string  // 学年
 	Semester     int     // 学期

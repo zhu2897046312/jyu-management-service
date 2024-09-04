@@ -1,6 +1,9 @@
 <template>
-  <div class="main-content">
-    <div class="container">
+  <div class="main">
+    <div class="left">
+      <h3>我的应用</h3>
+    </div>
+    <div class="right">
       <div class="box">
         <h2>{{ studentProfile.name }}</h2>
         <p>{{ studentProfile.class }}</p>
@@ -42,20 +45,27 @@ export default {
 </script>
 
 <style scoped>
-.main-content {
+.main {
   display: flex;
-  flex-direction: column;
   height: 100%; /* 确保 main-content 占满其父元素的高度 */
   overflow: hidden; /* 防止出现滚动条 */
 }
 
-.container {
+.left {
+  background-color: white;
+  width: 20%;
+  border: 1px solid #ccc; /* 在右侧添加一个边框 */
+}
+
+.right {
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* 每行两个盒子 */
-  grid-template-rows: repeat(3, auto); /* 三行 */
-  gap: 10px; /* 控制盒子之间的间距 */
+  grid-template-rows: repeat(3, 33%); /* 三行 */
+  /* gap: 10px; 控制盒子之间的间距 */
+  gap: 10px;
   height: 100%; 
-  overflow: auto; /* 允许内容溢出时出现滚动条 */
+  width: 80%;
+  padding-left: 20px; /* 给内容留出一些间距 */
 }
 
 .box {

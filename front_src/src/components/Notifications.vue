@@ -3,9 +3,11 @@
     <h3>通知</h3>
     <ul>
       <li v-for="(notification, index) in notifications" :key="index" :class="notification.type">
-        <span class="type">{{ getNotificationLabel(notification.type) }}</span>
-        <span class="content">{{ notification.content }}</span>
-        <span class="timestamp">{{ notification.timestamp }}</span>
+        <a href="#">
+          <span class="type">{{ getNotificationLabel(notification.type) }}</span>
+          <span class="content">{{ notification.content }}</span>
+          <span class="timestamp">{{ notification.timestamp }}</span>
+        </a>
       </li>
     </ul>
   </div>
