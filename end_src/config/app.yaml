@@ -1,5 +1,12 @@
 mysql:
-  dns: root:123456@tcp(127.0.0.1:3306)/jyu?charset=utf8&parseTime=True&loc=Local
+  user: "root"
+  password: "123"
+  host: "172.25.13.23"
+  port: 3306
+  database: "jyu"
+  charset: "utf8"
+  parseTime: true
+  loc: "Local"
 
 redis:
   addr: "127.0.0.1:6379"

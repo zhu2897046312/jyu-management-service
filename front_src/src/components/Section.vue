@@ -21,13 +21,6 @@ export default {
   data() {
     return {
       activeDropdown: null,
-      isDropdownVisible: {
-        1: false,
-        2: false,
-        3: false,
-        4: false,
-        5: false
-      },
       menuItems: [
       { title: '报名申请', options: ["学籍异动申请", "学生申请交流项目",
                                     "辅修报名","重修报名",
@@ -54,16 +47,6 @@ export default {
     };
   },
   methods: {
-    toggleDropdown(id) {
-      // 切换下拉菜单的显示状态
-      this.isDropdownVisible[id] = !this.isDropdownVisible[id];
-      // 关闭其他下拉菜单
-      for (let key in this.isDropdownVisible) {
-        if (parseInt(key) !== id) {
-          this.isDropdownVisible[key] = false;
-        }
-      }
-    },
     toggleDropdown(title) {
       this.activeDropdown = this.activeDropdown === title ? null : title;
     }

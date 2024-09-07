@@ -19,9 +19,12 @@ func Router() *gin.Engine{
         MaxAge: 12 * time.Hour,
     }))
 
-	r.POST("/admin/login",service.Login)
-    //insert
-	r.POST("/admin/register",service.Register)
+    r.GET("/admin/GetAll",service.GetAllCoursesHandler)
 
+	r.POST("/admin/Login",service.Login)
+    //insert
+	r.POST("/admin/Register",service.Register)
+
+    r.POST("/admin/EnrollCourse",service.EnrollCourseHandler)
 	return r
 }

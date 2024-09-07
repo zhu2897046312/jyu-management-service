@@ -1,7 +1,7 @@
 <template>
   <router-link to="/login"></router-link> 
   <router-view></router-view>
-  <Login />
+  <EnrollCourse />
 </template>
 
 <script>
@@ -11,6 +11,7 @@ import MainContent from './components/MainContent.vue'
 import MySection from './components/Section.vue'
 import Index from './views/Index.vue'
 import Login from './views/Login.vue'
+import EnrollCourse from './views/EnrollCourse.vue'
 
 export default {
   components: {
@@ -19,7 +20,8 @@ export default {
     MainContent,
     MySection,
     Index,
-    Login
+    Login,
+    EnrollCourse
   }
 }
 </script>

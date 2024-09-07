@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 	"context"
-
+	"path/filepath"
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
@@ -27,9 +27,12 @@ func init(){
 			Colorful:      true,
 		},
 	)
-	log.Println(viper.GetString("mysql.dns"))
+	configPath := filepath.Join("config")
+    configFileName := "app"
 
-	db, err := gorm.Open(mysql.Open("root:123456@tcp(127.0.0.1:3306)/jyu?charset=utf8&parseTime=True&loc=Local"),
+	dns := GetMysqlConfig(configPath, configFileName)
+
+	db, err := gorm.Open(mysql.Open(dns),
 		&gorm.Config{Logger: newLogger})
 	if err != nil {
 		panic("failed to connect database")
@@ -37,19 +40,7 @@ func init(){
 	DB_MySQL = db
 }
 
-func InitConfig(path   string){
-	viper.SetConfigName("app")
-	if path == "" {
-		path = "config"
-	}
-	viper.AddConfigPath(path)
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-func InitMySQL() {
+func InitMysql(){
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		logger.Config{
@@ -60,7 +51,12 @@ func InitMySQL() {
 	)
 	log.Println(viper.GetString("mysql.dns"))
 
-	db, err := gorm.Open(mysql.Open(viper.GetString("mysql.dns")),
+	configPath := filepath.Join("../config")
+    configFileName := "app"
+
+	dns := GetMysqlConfig(configPath, configFileName)
+
+	db, err := gorm.Open(mysql.Open(dns),
 		&gorm.Config{Logger: newLogger})
 	if err != nil {
 		panic("failed to connect database")
