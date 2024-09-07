@@ -10,6 +10,7 @@ import (
 type UserCourse struct {
 	Account    string `gorm:"not null" json:"account"`    // 学号
 	CourseCode string `gorm:"not null" json:"courseCode"` // 课程代码
+	Status     int    `gorm:"not null" json:"status"`     // 选课状态码
 }
 
 func init() {

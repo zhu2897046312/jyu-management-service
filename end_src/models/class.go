@@ -23,6 +23,7 @@ type CourseInformation struct {
 	TeacherName         string  `json:"teacher_name"`         // 教师名称
 	ClassTime           string  `json:"class_time"`           // 上课时间
 	ClassAddress        string  `json:"class_address"`        // 上课地点
+	StudentNumber       string  `json:"student_number"`       // 人数
 }
 
 
