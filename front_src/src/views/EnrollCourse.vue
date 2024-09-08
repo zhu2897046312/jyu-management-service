@@ -5,6 +5,7 @@
       <button>查询</button>
       <button>重置</button>
     </div>
+
     <div class="option">
 
     </div>
@@ -126,7 +127,7 @@
           <span class="course-code">{{ course.course_code }}</span>
           <a href=""  class="course-name">{{ course.course_name }}</a>
           <span class="course-credits">{{ course.credits }} 学分</span>
-          <span class="course-status">选课状态：{{ status }}</span>
+          <span class="course-status">选课状态：{{ getCourseStatu(course.course_code) }}</span>
           <button @click="toggleDropdown(course.course_code)" class="toggle-btn">
             <i :class="['dropdown-icon', { 'icon-up': activeDropdown === course.course_code, 'icon-down': activeDropdown !== course.course_code }]"></i>
           </button>
@@ -159,10 +160,10 @@
                   <td>{{ course.commencement_academy }}</td>
                   <td>{{ course.course_type }}</td>
                   <td>{{ course.course_nature }}</td>
-                  <td>线上/线下</td>
-                  <td>40/50</td>
+                  <td>{{ course.teaching_mode }}</td>
+                  <td>{{ course.choosed_number }} / {{ course.max_student_number }}</td>
                   <td>
-                    <button class="action-btn">选课</button>
+                    <button class="action-btn" @click="selectCourse(course.course_code)">选课</button>
                   </td>
                 </tr>
               </tbody>
@@ -176,17 +177,36 @@
 
 <script>
 import axios from 'axios';
-
 export default {
   data() {
     return {
       activeDropdown: null,
       status: '未选',  // 初始状态
-      courses: []
+      courses: [],
+      courseStatuses: [], // 课程状态
+      menuItems:[
+        {title:"年级：" ,option:[]},
+        {title:"学院：" ,option:[]},
+        {title:"专业：" ,option:[]},
+        {title:"开课学院：" ,option:[]},
+        {title:"课程类别：" ,option:[]},
+        {title:"课程性质：" ,option:[]},
+        {title:"课程归属：" ,option:[]},
+        {title:"教学模式：" ,option:[]},
+        {title:"上课星期：" ,option:[]},
+        {title:"上课节次：" ,option:[]},
+        {title:"是否重修：" ,option:[]},
+        {title:"是否有余量：" ,option:[]},
+      ]
     };
   },
   mounted() {
     this.fetchCourses();
+    console.log(this.$store); // 打印 Vuex store 对象
+    console.log(this.$store.getters); // 打印所有的 getters
+    console.log(this.$store.getters.getLoginData); // 打印 loginData getter
+    console.log(this.$store.getters.getLoginData.account); // 打印 loginData getter
+    this.fetchCouresStatus();
   },
   methods: {
     async fetchCourses() {
@@ -199,8 +219,88 @@ export default {
     },
     toggleDropdown(courseCode) {
       this.activeDropdown = this.activeDropdown === courseCode ? null : courseCode;
+    },
+    async fetchCourses() {
+      const userCourseData = {
+        account: this.$store.getters.getLoginData.account,  // 当前登录用户的学号
+        course_code: courseCode,  // 选课的课程代码
+        status: 1
+      };
+
+      axios({
+        method: 'POST',
+        url: 'http://localhost:8081/admin/EnrollCourse',  
+        data: userCourseData,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => {
+        console.log('选课成功', res.data);
+      })
+      .catch(err => {
+        console.error('选课失败', err);
+      });
+    },
+    async fetchCourseStatu() {
+      const userCourseData = {
+        account: this.$store.getters.getLoginData.account,  // 当前登录用户的学号
+      };
+
+      axios({
+        method: 'POST',
+        url: 'http://localhost:8081/admin/GetAllByAccount',  
+        data: userCourseData,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => {
+        console.log('成功', res.data);
+
+      })
+      .catch(err => {
+        console.error('失败', err);
+      });
+    },
+    selectCourse(courseCode) {
+      const userCourseData = {
+        account: this.$store.getters.getLoginData.account,  // 当前登录用户的学号
+        course_code: courseCode,  // 选课的课程代码
+        status: 1
+      };
+
+      axios({
+        method: 'POST',
+        url: 'http://localhost:8081/admin/EnrollCourse',  
+        data: userCourseData,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => {
+        console.log('选课成功', res.data);
+
+      })
+      .catch(err => {
+        console.error('选课失败', err);
+      });
+    },
+    getCourseStatu(courseCode){
+      const courseStatus = this.courseStatuses.find(item => item.course_code === courseCode);
+      console.log(courseStatus)
+      return courseStatus === 1 ? '已选' : '未选';
+    },
+    setCourseStatu(courseCode){
+      const courseStatus = this.courseStatuses.find(item => item.course_code === courseCode);
+      if(courseStatus){
+        courseStatus.status = 1;
+      }else{
+        this.courseStatuses.push({course_code, status: 1});
+      }
+      console.log(this.courseStatuses)
     }
-  }
+  },
 };
 </script>
 
@@ -211,6 +311,8 @@ export default {
   padding: 5%;
   background-color: #f8f9fa;
   border-radius: 10px;
+  max-height: 80vh; /* 设置容器的最大高度 */
+  overflow-y: auto; /* 启用垂直滚动条 */
 }
 
 /* 选课列表样式 */

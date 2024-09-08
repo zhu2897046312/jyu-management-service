@@ -9,7 +9,7 @@ import (
 
 type UserCourse struct {
 	Account    string `gorm:"not null" json:"account"`    // 学号
-	CourseCode string `gorm:"not null" json:"courseCode"` // 课程代码
+	CourseCode string `gorm:"not null" json:"course_code"` // 课程代码
 	Status     int    `gorm:"not null" json:"status"`     // 选课状态码
 }
 
@@ -45,6 +45,11 @@ func (u *UserCourse) GetAll() ([]UserCourse, *gorm.DB) {
 	return borrowers, utils.DB_MySQL.Model(&UserCourse{}).Find(&borrowers)
 }
 
+func (u *UserCourse) GetByAccount(account string) ([]UserCourse, *gorm.DB) {
+	var borrowers []UserCourse
+	return borrowers, utils.DB_MySQL.Model(&UserCourse{}).Where("account= ?", account).Find(&borrowers)
+}
+
 func (u *UserCourse) PageQuery(page int, pageSize int) ([]UserCourse, *gorm.DB) {
 	employees := make([]UserCourse, 0)
 	var total int64
@@ -76,3 +81,6 @@ func (u *UserCourse) EnrollCourse(account string, courseCode string) error {
 
 	return nil
 }
+
+
+

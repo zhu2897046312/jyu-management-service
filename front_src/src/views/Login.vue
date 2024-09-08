@@ -3,11 +3,23 @@
       <form @submit.prevent="login">
         <div class="form-group">
           <label for="account">账号</label>
-          <input type="text" id="account" v-model="loginData.account" placeholder="请输入账号" />
+          <input 
+            type="text" 
+            id="account" 
+            v-model="loginData.account" 
+            placeholder="请输入账号" 
+          />
+          <!-- 更新account到Vuex -->
         </div>
         <div class="form-group">
           <label for="password">密码</label>
-          <input type="password" id="password" v-model="loginData.password" placeholder="请输入密码" />
+          <input 
+            type="password" 
+            id="password" 
+            v-model="loginData.password" 
+            placeholder="请输入密码" 
+          />
+          <!-- 更新password到Vuex -->
         </div>
         <button type="submit">登录</button>
       </form>
@@ -17,6 +29,8 @@
 <script>
 
 import axios from 'axios';
+import { mapActions } from 'vuex';
+
 
 export default {
   data() {
@@ -28,29 +42,32 @@ export default {
     };
   },
   methods: {
+    ...mapActions(['updateAccount', 'updatePassword']),
     login() {
       // 发送登录请求
+      // 调用 Vuex action 更新全局状态
+      this.updateAccount(this.loginData.account);
+      this.updatePassword(this.loginData.password);
+      
       let submit = {
           "account": this.loginData.account,
           "password": this.loginData.password
       }
-      console.log(submit);
       axios({
         method: "POST",
-        url: "http://localhost:8081/admin/login",
+        url: "http://localhost:8081/admin/Login",
         data: submit,
         headers: {
           'Content-Type': 'application/json'
         }
       }).then(res => {
-        console.log(submit); // 打印登录请求的数据
         console.log(res.data); // 打印后端返回的数据
         console.log("登录成功");
         this.$router.push({ path: '/index' })
       }).catch(err => {
         console.log("登录失败");
       });
-    }
+    },
   }
 };
 </script>

@@ -8,7 +8,7 @@
           </button>
           <ul v-if="activeDropdown === item.title" class="dropdown-menu">
             <li v-for="option in item.options" :key="option">
-              <a href="#">{{ option }}</a>
+              <a href="#" @click.prevent="navigateTo(option)">{{ option }}</a>
             </li>
           </ul>
         </li>
@@ -17,6 +17,8 @@
 </template>
 
 <script>
+import { useRouter } from 'vue-router';
+
 export default {
   data() {
     return {
@@ -44,6 +46,35 @@ export default {
       { title: '信息查询', options: ['Option 1', 'Option 2'] },
       { title: '教学评价', options: ['Option 1', 'Option 2'] }
     ]
+    };
+  },
+  props: {
+    option: {
+      type: String,
+      required: true
+    }
+  },
+  setup() {
+    const router = useRouter();
+
+    // 映射对象，将 option 值映射到路由名称
+    const routeMap = {
+      '自主选课': 'EnrollCourse',
+      '其他': 'AnotherComponent'
+      // 添加更多映射
+    };
+
+    const navigateTo = (option) => {
+      const routeName = routeMap[option];
+      if (routeName) {
+        router.push({ name: routeName });
+      } else {
+        console.error(`无匹配的路由名称: ${option}`);
+      }
+    };
+
+    return {
+      navigateTo
     };
   },
   methods: {

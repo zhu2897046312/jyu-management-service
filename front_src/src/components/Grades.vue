@@ -24,19 +24,19 @@ export default {
       ]
     };
   },
-  mounted() {
-    this.fetchGrades();
-  },
-  methods: {
-    async fetchGrades() {
-      try {
-        const response = await axios.get('/api/grades');
-        this.grades = response.data;
-      } catch (error) {
-        console.error('获取成绩数据失败:', error);
-      }
-    }
-  }
+  // mounted() {
+  //   this.fetchGrades();
+  // },
+  // methods: {
+  //   async fetchGrades() {
+  //     try {
+  //       const response = await axios.get('/api/grades');
+  //       this.grades = response.data;
+  //     } catch (error) {
+  //       console.error('获取成绩数据失败:', error);
+  //     }
+  //   }
+  // }
 };
 </script>
 

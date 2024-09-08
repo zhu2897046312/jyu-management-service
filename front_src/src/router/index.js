@@ -2,6 +2,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Index from '@/views/Index.vue';  
 import Login from '@/views/Login.vue'; 
+import EnrollCourse from '@/views/EnrollCourse.vue'; 
 
 const routes = [
   {
@@ -13,6 +14,11 @@ const routes = [
     path: '/index',
     name: 'Index',
     component: Index,
+  },
+  {
+    path: '/index',
+    name: 'EnrollCourse',
+    component: EnrollCourse,
   },
 ];
 

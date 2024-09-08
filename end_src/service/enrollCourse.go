@@ -39,3 +39,21 @@ func GetAllCoursesHandler(c *gin.Context)	{
 	c.JSON(http.StatusOK, courses)
 }
 
+func GetCourseByAccountHandle(c *gin.Context){
+	var req models.UserCourse
+
+	// 解析请求数据
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据"})
+		return
+	}
+
+	arr , db := req.GetByAccount(req.Account)
+	if db.Error!= nil{
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error": db.Error.Error(),
+        })
+    }
+
+	c.JSON(http.StatusOK, arr)
+}

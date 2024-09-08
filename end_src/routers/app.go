@@ -20,6 +20,7 @@ func Router() *gin.Engine{
     }))
 
     r.GET("/admin/GetAll",service.GetAllCoursesHandler)
+    r.POST("/admin/GetAllByAccount",service.GetCourseByAccountHandle)
 
 	r.POST("/admin/Login",service.Login)
     //insert

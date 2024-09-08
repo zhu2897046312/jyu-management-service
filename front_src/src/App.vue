@@ -6,7 +6,6 @@
 
 <script>
 import MyHeader from './components/MyHeader.vue'
-import Sidebar from './components/Sidebar.vue'
 import MainContent from './components/MainContent.vue'
 import MySection from './components/Section.vue'
 import Index from './views/Index.vue'
@@ -16,7 +15,6 @@ import EnrollCourse from './views/EnrollCourse.vue'
 export default {
   components: {
     MyHeader,
-    Sidebar,
     MainContent,
     MySection,
     Index,

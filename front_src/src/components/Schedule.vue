@@ -22,19 +22,19 @@ export default {
       ]
     };
   },
-  mounted() {
-    this.fetchCourses();
-  },
-  methods: {
-    async fetchCourses() {
-      try {
-        const response = await axios.get('/api/courses');
-        this.courses = response.data;
-      } catch (error) {
-        console.error('获取课程数据失败:', error);
-      }
-    }
-  }
+  // mounted() {
+  //   this.fetchCourses();
+  // },
+  // methods: {
+  //   async fetchCourses() {
+  //     try {
+  //       const response = await axios.get('http://localhost:8081/admin/GetAll');
+  //       this.courses = response.data;
+  //     } catch (error) {
+  //       console.error('获取课程数据失败:', error);
+  //     }
+  //   }
+  // }
 };
 </script>
 

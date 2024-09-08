@@ -10,14 +10,12 @@
   
   <script>
   import MyHeader from '../components/MyHeader.vue'
-  import Sidebar from '../components/Sidebar.vue'
   import MainContent from '../components/MainContent.vue'
   import MySection from '../components/Section.vue'
   
   export default {
     components: {
       MyHeader,
-      Sidebar,
       MainContent,
       MySection
     }

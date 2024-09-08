@@ -11,25 +11,26 @@ import (
 
 // 课程信息
 type CourseInformation struct {
-	CourseCode          string  `gorm:"not null;" json:"course_code"`             // 课程代码
-	AcademicYear        string  `json:"academic_year"`        // 学年
-	Semester            int     `json:"semester"`             // 学期
-	CourseName          string  `json:"course_name"`          // 课程名称
-	CommencementAcademy string  `json:"commencement_academy"` // 开课学院
-	CourseType          int     `json:"course_type"`          // 课程类别
-	CourseNature        int     `json:"course_nature"`        // 课程性质
-	Credits             float32 `json:"credits"`              // 学分
-	ClassName           string  `json:"class_name"`           // 教学班名称
-	TeacherName         string  `json:"teacher_name"`         // 教师名称
-	ClassTime           string  `json:"class_time"`           // 上课时间
-	ClassAddress        string  `json:"class_address"`        // 上课地点
-	StudentNumber       string  `json:"student_number"`       // 人数
+	CourseCode          string  `gorm:"primaryKey;not null;" json:"course_code"` // 课程代码
+	AcademicYear        string  `json:"academic_year"`                           // 学年
+	Semester            int     `json:"semester"`                                // 学期
+	CourseName          string  `json:"course_name"`                             // 课程名称
+	CommencementAcademy string  `json:"commencement_academy"`                    // 开课学院
+	CourseType          int     `json:"course_type"`                             // 课程类别
+	CourseNature        int     `json:"course_nature"`                           // 课程性质
+	Credits             float32 `json:"credits"`                                 // 学分
+	ClassName           string  `json:"class_name"`                              // 教学班名称
+	TeacherName         string  `json:"teacher_name"`                            // 教师名称
+	ClassTime           string  `json:"class_time"`                              // 上课时间
+	ClassAddress        string  `json:"class_address"`                           // 上课地点
+	MaxStudentNumber    string  `json:"max_student_number"`                      // 人数
+	ChoosedNumber       string  `json:"choosed_number"`                          // 已选人数
+	TeachingMode        int     `json:"teaching_mode"`                           //教学模式
 }
-
 
 // 成绩信息
 type GradeInformation struct {
-	CourseCode   string  `gorm:"not null;"` // 课程代码
+	CourseCode   string  `gorm:"primaryKey;not null;"` // 课程代码
 	Credits      float32 // 学分
 	AcademicYear string  // 学年
 	Semester     int     // 学期
@@ -64,6 +65,11 @@ const (
 	Retakes_3 int = 4 // 补考3
 	Retakes_4 int = 5 // 补考4
 	Retakes_5 int = 5 // 补考5
+)
+
+const (
+	Online  int = 1 //线上
+	Offline int = 2 //线下
 )
 
 func init() {
