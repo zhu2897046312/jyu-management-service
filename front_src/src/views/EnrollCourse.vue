@@ -127,7 +127,7 @@
           <span class="course-code">{{ course.course_code }}</span>
           <a href=""  class="course-name">{{ course.course_name }}</a>
           <span class="course-credits">{{ course.credits }} 学分</span>
-          <span class="course-status">选课状态：{{ getCourseStatu(course.course_code) }}</span>
+          <span class="course-status">选课状态：{{ getCourseStatus(course.course_code) }}</span>
           <button @click="toggleDropdown(course.course_code)" class="toggle-btn">
             <i :class="['dropdown-icon', { 'icon-up': activeDropdown === course.course_code, 'icon-down': activeDropdown !== course.course_code }]"></i>
           </button>
@@ -183,7 +183,13 @@ export default {
       activeDropdown: null,
       status: '未选',  // 初始状态
       courses: [],
-      courseStatuses: [], // 课程状态
+      courseStatuses: [
+        {course_code:"cs101",status: 1},
+        {course_code:"CS103",status: 1},
+        {course_code:"CS104",status: 1},
+        {course_code:"CS105",status: 1},
+        {course_code:"CS106",status: 1},
+      ], // 课程状态
       menuItems:[
         {title:"年级：" ,option:[]},
         {title:"学院：" ,option:[]},
@@ -206,7 +212,6 @@ export default {
     console.log(this.$store.getters); // 打印所有的 getters
     console.log(this.$store.getters.getLoginData); // 打印 loginData getter
     console.log(this.$store.getters.getLoginData.account); // 打印 loginData getter
-    this.fetchCouresStatus();
   },
   methods: {
     async fetchCourses() {
@@ -220,48 +225,26 @@ export default {
     toggleDropdown(courseCode) {
       this.activeDropdown = this.activeDropdown === courseCode ? null : courseCode;
     },
-    async fetchCourses() {
+    fetchStatus() {
       const userCourseData = {
-        account: this.$store.getters.getLoginData.account,  // 当前登录用户的学号
-        course_code: courseCode,  // 选课的课程代码
-        status: 1
-      };
+          account: this.$store.getters.getLoginData.account,  // 当前登录用户的学号
+        };
 
-      axios({
-        method: 'POST',
-        url: 'http://localhost:8081/admin/EnrollCourse',  
-        data: userCourseData,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(res => {
-        console.log('选课成功', res.data);
-      })
-      .catch(err => {
-        console.error('选课失败', err);
-      });
-    },
-    async fetchCourseStatu() {
-      const userCourseData = {
-        account: this.$store.getters.getLoginData.account,  // 当前登录用户的学号
-      };
+        axios({
+          method: 'POST',
+          url: 'http://localhost:8081/admin/GetAllByAccount',  
+          data: userCourseData,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(res => {
+          console.log('成功', res.data);
 
-      axios({
-        method: 'POST',
-        url: 'http://localhost:8081/admin/GetAllByAccount',  
-        data: userCourseData,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(res => {
-        console.log('成功', res.data);
-
-      })
-      .catch(err => {
-        console.error('失败', err);
-      });
+        })
+        .catch(err => {
+          console.error('失败', err);
+        });
     },
     selectCourse(courseCode) {
       const userCourseData = {
@@ -286,19 +269,16 @@ export default {
         console.error('选课失败', err);
       });
     },
-    getCourseStatu(courseCode){
+    getCourseStatus(courseCode) {
       const courseStatus = this.courseStatuses.find(item => item.course_code === courseCode);
-      console.log(courseStatus)
-      return courseStatus === 1 ? '已选' : '未选';
-    },
-    setCourseStatu(courseCode){
-      const courseStatus = this.courseStatuses.find(item => item.course_code === courseCode);
-      if(courseStatus){
-        courseStatus.status = 1;
-      }else{
-        this.courseStatuses.push({course_code, status: 1});
+      
+      if (courseStatus) {
+        // 如果找到对应的 course_code，判断 status
+        return courseStatus.status === 1 ? '已选' : '未选';
+      } else {
+        // 如果未找到对应的 course_code，返回默认值 '未选'
+        return '未选';
       }
-      console.log(this.courseStatuses)
     }
   },
 };

@@ -16,7 +16,7 @@ const routes = [
     component: Index,
   },
   {
-    path: '/index',
+    path: '/enrollCourse',
     name: 'EnrollCourse',
     component: EnrollCourse,
   },

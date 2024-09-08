@@ -8,9 +8,9 @@ import (
 
 // 账号
 type UserAccount struct {
-	Account  string `gorm:"primaryKey;not null;" json: "Account"` // 学号
-	Password string `gorm:"not null" json: "Password"`            // 密码
-	ChatType int    `gorm:"not null" json: "ChatType"`            // 账户类型 学生 、 教师 、 管理员
+	Account  string `gorm:"primaryKey;not null;" json:"Account"` // 学号
+	Password string `gorm:"not null" json:"Password"`            // 密码
+	ChatType int    `gorm:"not null" json:"ChatType"`            // 账户类型 学生 、 教师 、 管理员
 }
 
 // 基本信息

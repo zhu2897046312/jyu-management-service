@@ -1,7 +1,7 @@
 <template>
   <router-link to="/login"></router-link> 
   <router-view></router-view>
-  <EnrollCourse />
+
 </template>
 
 <script>
