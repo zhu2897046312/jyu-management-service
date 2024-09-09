@@ -57,3 +57,18 @@ func GetCourseByAccountHandle(c *gin.Context){
 
 	c.JSON(http.StatusOK, arr)
 }
+
+func DynamicQueryHandler(c *gin.Context) {
+	var conditions map[string]interface{}
+	var courses models.CourseInformation
+	if err := c.BindJSON(&conditions); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid JSON format"})
+		return
+	}
+	results, err := courses.DynamicQuery(conditions)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to execute query"})
+		return
+	}
+	c.JSON(200, results)
+}

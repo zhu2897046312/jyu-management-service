@@ -2,120 +2,25 @@
   <div class="container">
     <div>
       <input type="text">
-      <button>查询</button>
-      <button>重置</button>
+      <button @click="performSearch">查询</button>
+      <button @click="resetFilters">重置</button>
     </div>
 
     <div class="option">
-
+      <span v-for="(tag, index) in selectedTags" :key="index" class="selected-tag">
+        {{ tag }}
+        <button @click="removeTag(index)">x</button> <!-- 删除标签按钮 -->
+      </span>
     </div>
     <div class="search">
       <ul>
-        <li>
-          年级：
-          <a href="">2024</a>
-          <a href="">2023</a>
-          <a href="">2022</a>
-          <a href="">2021</a>
-          <a href="">2020</a>
-          <a href="">2019</a>
-          <a href="">2018</a>
-          <a href="">2017</a>
-          <a href="">2016</a>
-          <a href="">2015</a>
-        </li>
-        <li>
-          学院：
-          <a href="">信息学院</a>
-          <a href="">管理学院</a>
-          <a href="">人文学院</a>
-          <a href="">艺术学院</a>
-          <a href="">社会学院</a>
-          <a href="">经济学院</a>
-          <a href="">法学院</a>
-          <a href="">外国语学院</a>
-          <a href="">国际 relations学院</a>
-          <a href="">新闻学院</a>
-        </li>
-        <li>
-          专业：
-          <a href="">信息管理</a>
-          <a href="">人工智能</a>
-          <a href="">数据科学</a>
-          <a href="">网络与信息安全</a>
-          <a href="">数字媒体</a>
-          <a href="">应用心理学</a>
-          <a href="">国际商务</a>
-          <a href="">金学</a>
-          <a href="">外国语</a>
-          <a href="">日语</a>
-        </li>
-        <li>
-          开课学院：
-          <a href="">信息学院</a>
-          <a href="">管理学院</a>
-          <a href="">人文学院</a>
-          <a href="">艺术学院</a>
-          <a href="">社会学院</a>
-          <a href="">经济学院</a>
-          <a href="">法学院</a>
-          <a href="">外国语学院</a>
-          <a href="">国际 relations学院</a>
-          <a href="">新闻学院</a>
-        </li>
-        <li>
-          课程类别：
-          <a href="">必修</a>
-          <a href="">选修</a>
-          <a href="">任选</a>
-        </li>
-        <li>
-          课程性质：
-          <a href="">公选</a>
-          <a href="">专选</a>
-          <a href="">通识</a>
-        </li>
-        <li>
-          课程归属：
-          <a href="">基础课程</a>
-          <a href="">专业课程</a>
-          <a href="">选修课程</a>
-          <a href="">任选课程</a>
-        </li>
-        <li>
-          教学模式：
-          <a href="">自主</a>
-          <a href="">集中</a>
-          <a href="">面授</a>
-        </li>
-        <li>
-          上课星期：
-          <a href="">星期一</a>
-          <a href="">星期二</a>
-          <a href="">星期三</a>
-          <a href="">星期四</a>
-          <a href="">星期五</a>
-          <a href="">星期六</a>
-          <a href="">星期日</a>
-        </li>
-        <li>
-          上课节次：
-          <a href="">1-2节</a>
-          <a href="">3-4节</a>
-          <a href="">5-6节</a>
-          <a href="">7-8节</a>
-          <a href="">9-10节</a>
-          <a href="">11-12节</a>
-        </li>
-        <li>
-          是否重修：
-          <a href="">是</a>
-          <a href="">否</a>
-        </li>
-        <li>
-          是否有余量：
-          <a href="">是</a>
-          <a href="">否</a>
+        <li v-for="(item, index) in categories" :key="index">
+          {{ item.title }}：
+          <div class="options-container">
+            <a v-for="(option, idx) in item.options" :key="idx" href="#" @click.prevent="selectTag(item.title,option)" class="option">
+              {{ option }}
+            </a>
+        </div>
         </li>
       </ul>
     </div>
@@ -123,15 +28,15 @@
     <!-- 选课列表 -->
     <ul class="enroll">
       <li v-for="course in courses" :key="course.course_code" class="course-item">
-        <h7 class="course-header">
+        <div class="course-header">
           <span class="course-code">{{ course.course_code }}</span>
-          <a href=""  class="course-name">{{ course.course_name }}</a>
+          <a href="#" @click.prevent="selectTag('2024')"  class="course-name">{{ course.course_name }}</a>
           <span class="course-credits">{{ course.credits }} 学分</span>
           <span class="course-status">选课状态：{{ getCourseStatus(course.course_code) }}</span>
           <button @click="toggleDropdown(course.course_code)" class="toggle-btn">
             <i :class="['dropdown-icon', { 'icon-up': activeDropdown === course.course_code, 'icon-down': activeDropdown !== course.course_code }]"></i>
           </button>
-        </h7>
+        </div>
 
         <!-- 展示课程详细信息的区域 -->
         <transition name="fade">
@@ -182,6 +87,7 @@ export default {
     return {
       activeDropdown: null,
       status: '未选',  // 初始状态
+      selectedTags: [], // 保存已选标签
       courses: [],
       courseStatuses: [
         {course_code:"cs101",status: 1},
@@ -190,19 +96,98 @@ export default {
         {course_code:"CS105",status: 1},
         {course_code:"CS106",status: 1},
       ], // 课程状态
-      menuItems:[
-        {title:"年级：" ,option:[]},
-        {title:"学院：" ,option:[]},
-        {title:"专业：" ,option:[]},
-        {title:"开课学院：" ,option:[]},
-        {title:"课程类别：" ,option:[]},
-        {title:"课程性质：" ,option:[]},
-        {title:"课程归属：" ,option:[]},
-        {title:"教学模式：" ,option:[]},
-        {title:"上课星期：" ,option:[]},
-        {title:"上课节次：" ,option:[]},
-        {title:"是否重修：" ,option:[]},
-        {title:"是否有余量：" ,option:[]},
+      categories: [
+        {
+          title: '年级',
+          options: [
+            '2024', '2023', 
+            '2022', '2021', 
+            '2020', '2019', 
+            '2018', '2017', 
+            '2016', '2015'
+          ]
+        },
+        {
+          title: '学院',
+          options: [
+            '信息学院', '管理学院', 
+            '人文学院', '艺术学院', 
+            '社会学院', '经济学院', 
+            '法学院', '外国语学院', 
+            '国际学院', '新闻学院'
+          ]
+        },
+        {
+          title: '专业',
+          options: [
+            '信息管理', '人工智能', 
+            '数据科学', '网络与信息安全', 
+            '数字媒体', '应用心理学', 
+            '国际商务', '金学', 
+            '外国语', '日语'
+          ]
+        },
+        {
+          title: '开课学院',
+          options: [
+            '信息学院', '管理学院', 
+            '人文学院', '艺术学院', 
+            '社会学院', '经济学院', 
+            '法学院', '外国语学院', 
+            '国际学院', '新闻学院'
+          ]
+        },
+        {
+          title: '课程类别',
+          options: [
+            '实践课', '通识任选课', 
+            '通识限选课', '国防安全教育课', 
+            '思想政治理论课', '语言与技能课',
+            '计算机应用技术课', '健康与运动课',
+            '学科基础课', '专业基础课',
+          ]
+        },
+        {
+          title: '课程性质',
+          options: ['公选', '专选', '通识']
+        },
+        {
+          title: '课程归属',
+          options: [
+            '人文社会科学', '自然科学与技术', 
+            '艺术与审美', '教师教育',
+            '客家文化','创新创业'
+          ]
+        },
+        {
+          title: '教学模式',
+          options: ['线上', '线下',]
+        },
+        {
+          title: '上课星期',
+          options: [
+            '星期一', '星期二', 
+            '星期三', '星期四', 
+            '星期五', '星期六', 
+            '星期日'
+          ]
+        },
+        // {
+        //   title: '上课节次',
+        //   options: [
+        //     '1-2节', '3-4节', 
+        //     '5-6节', '7-8节', 
+        //     '9-10节', '11-12节'
+        //   ]
+        // },
+        {
+          title: '是否重修',
+          options: ['是', '否']
+        },
+        {
+          title: '是否有余量',
+          options: ['是', '否']
+        }
       ]
     };
   },
@@ -214,6 +199,17 @@ export default {
     console.log(this.$store.getters.getLoginData.account); // 打印 loginData getter
   },
   methods: {
+    // 选择标签并添加到 selectedTags 中
+    selectTag(key, value) {
+      const tag = `${key}:${value}`; // 使用下划线作为分隔符
+      if (!this.selectedTags.includes(tag)) {
+        this.selectedTags.push(tag);
+      }
+    },
+    // 删除标签
+    removeTag(index) {
+      this.selectedTags.splice(index, 1);
+    },
     async fetchCourses() {
       try {
         const response = await axios.get('http://localhost:8081/admin/GetAll');
@@ -279,6 +275,88 @@ export default {
         // 如果未找到对应的 course_code，返回默认值 '未选'
         return '未选';
       }
+    },
+    performSearch(){
+      const conditions = {};
+      
+      if (!this.selectedTags){
+        fetchCourses();
+      }else{
+        this.selectedTags.forEach(tag => {
+          const [key, value] = tag.split(':');
+          switch (key) {
+            case '年级':
+              conditions['academic_year'] = value;
+              break;
+            case '开课学院':
+              conditions['commencement_academy'] = value;
+              break;
+            case '课程类别':
+              conditions['course_type'] = this.convertCourseType(value);
+              break;
+            case '课程性质':
+              conditions['course_nature'] = this.convertCourseNature(value);
+              break;
+            case '课程归属':
+              conditions['course_affiliation'] = this.convertCourseNature(value);
+              break;
+            case '教学模式':
+              conditions['teaching_mode'] = this.convertTeachingMode(value);
+              break;
+            default:
+              break;
+          }
+        });
+      console.log(conditions);
+      axios({
+        method: 'POST',
+        url: 'http://localhost:8081/admin/courses',  
+        data: conditions,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => {
+        this.courses = res.data;
+        console.log('查询结果:', res.data);
+      })
+      .catch(err => {
+        console.error('查询出错:', err);
+      });
+      }
+    },
+    resetFilters() {
+      this.searchQuery = '';
+      this.selectedTags = [];
+    },
+    convertCourseType(value) {
+      const types = { 
+        '实践课': 1, '通识任选课': 2, 
+        '通识限选课': 3, '国防安全教育课': 4, 
+        '思想政治理论课': 5, '语言与技能课': 6,
+        '计算机应用技术课': 7, '健康与运动课': 8,
+        '学科基础课': 9, '专业基础课': 10,
+      };
+      return types[value] || null;
+    },
+    convertCourseNature(value) {
+      const natures = { '通识必修': 1, '通识选修': 2, 
+        '专业必修': 3, '专业选修': 4, 
+        '职业必修': 5, '职业选修': 6
+      };
+      return natures[value] || null;
+    },
+    convertTeachingMode(value) {
+      const modes = { '线上': 1, '线下': 2,};
+      return modes[value] || null;
+    },
+    convertCourseAffiliation(value) {
+      const affiliations = { 
+        '人文社会科学': 1, '自然科学与技术': 2, 
+        '艺术与审美': 3, '教师教育': 4,
+        '客家文化': 5,'创新创业': 6
+      };
+      return affiliations[value] || null;
     }
   },
 };
@@ -293,6 +371,51 @@ export default {
   border-radius: 10px;
   max-height: 80vh; /* 设置容器的最大高度 */
   overflow-y: auto; /* 启用垂直滚动条 */
+}
+
+.search {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search ul li {
+  list-style-type: none;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.options-container {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.option {
+  display: inline-block;
+  margin-right: 10px;
+  margin-bottom: 5px;
+  padding: 5px 10px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #333;
+  white-space: nowrap; /* 防止单个选项内换行 */
+}
+
+.options-container a:nth-child(n+2) {
+  text-indent: 10px; /* 溢出部分与第一个选项对齐 */
+}
+
+.option:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.option:active {
+  background-color: #0056b3;
+  color: #fff;
 }
 
 /* 选课列表样式 */

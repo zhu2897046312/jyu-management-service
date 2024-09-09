@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"jyu-service/utils"
 
 	"gorm.io/gorm"
@@ -12,10 +13,11 @@ import (
 // 课程信息
 type CourseInformation struct {
 	CourseCode          string  `gorm:"primaryKey;not null;" json:"course_code"` // 课程代码
-	AcademicYear        string  `json:"academic_year"`                           // 学年
+	AcademicYear        string  `json:"academic_year"`                           // 年级
 	Semester            int     `json:"semester"`                                // 学期
 	CourseName          string  `json:"course_name"`                             // 课程名称
 	CommencementAcademy string  `json:"commencement_academy"`                    // 开课学院
+	CourseAffiliation   string  `json:"course_affiliation"`                      // 课程归属
 	CourseType          int     `json:"course_type"`                             // 课程类别
 	CourseNature        int     `json:"course_nature"`                           // 课程性质
 	Credits             float32 `json:"credits"`                                 // 学分
@@ -25,7 +27,7 @@ type CourseInformation struct {
 	ClassAddress        string  `json:"class_address"`                           // 上课地点
 	MaxStudentNumber    string  `json:"max_student_number"`                      // 人数
 	ChoosedNumber       string  `json:"choosed_number"`                          // 已选人数
-	TeachingMode        int     `json:"teaching_mode"`                           //教学模式
+	TeachingMode        int     `json:"teaching_mode"`                           // 教学模式
 }
 
 // 成绩信息
@@ -113,6 +115,57 @@ func (u *CourseInformation) PageQuery(page int, pageSize int) ([]CourseInformati
 	offset := (page - 1) * pageSize
 	query := utils.DB_MySQL.Model(&CourseInformation{}).Limit(pageSize).Offset(offset).Find(&employees)
 	return employees, query
+}
+
+func (u *CourseInformation) DynamicQuery(conditions map[string]interface{}) ([]CourseInformation, error) {
+	var results []CourseInformation
+	query := utils.DB_MySQL.Model(&CourseInformation{})
+
+	// Build the query based on conditions
+	for key, value := range conditions {
+		switch key {
+		case "course_code":
+			query = query.Where("course_code = ?", value)
+		case "academic_year":
+			query = query.Where("academic_year = ?", value)
+		case "semester":
+			query = query.Where("semester = ?", value)
+		case "course_name":
+			query = query.Where("course_name LIKE ?", "%"+value.(string)+"%")
+		case "commencement_academy":
+			query = query.Where("commencement_academy = ?", value)
+		case "course_type":
+			query = query.Where("course_type = ?", value)
+		case "course_nature":
+			query = query.Where("course_nature = ?", value)
+		case "credits":
+			query = query.Where("credits = ?", value)
+		case "class_name":
+			query = query.Where("class_name LIKE ?", "%"+value.(string)+"%")
+		case "teacher_name":
+			query = query.Where("teacher_name LIKE ?", "%"+value.(string)+"%")
+		case "class_time":
+			query = query.Where("class_time = ?", value)
+		case "class_address":
+			query = query.Where("class_address LIKE ?", "%"+value.(string)+"%")
+		case "max_student_number":
+			query = query.Where("max_student_number = ?", value)
+		case "choosed_number":
+			query = query.Where("choosed_number = ?", value)
+		case "teaching_mode":
+			query = query.Where("teaching_mode = ?", value)
+		default:
+			return nil, fmt.Errorf("unsupported query condition: %s", key)
+		}
+	}
+
+	// Execute the query
+	err := query.Find(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
 
 // 成绩信息
