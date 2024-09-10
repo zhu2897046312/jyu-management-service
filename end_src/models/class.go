@@ -23,7 +23,7 @@ type CourseInformation struct {
 	Credits             float32 `json:"credits"`                                 // 学分
 	ClassName           string  `json:"class_name"`                              // 教学班名称
 	TeacherName         string  `json:"teacher_name"`                            // 教师名称
-	ClassTime           string  `json:"class_time"`                              // 上课时间
+	ClassTime           string  `json:"class_time"`                              // 上课时间（节次:星期:持续周次）
 	ClassAddress        string  `json:"class_address"`                           // 上课地点
 	MaxStudentNumber    int     `json:"max_student_number"`                      // 人数
 	ChoosedNumber       int     `json:"choosed_number"`                          // 已选人数

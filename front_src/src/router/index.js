@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Index from '@/views/Index.vue';  
 import Login from '@/views/Login.vue'; 
 import EnrollCourse from '@/views/EnrollCourse.vue'; 
-
+import PrintfCourse from '@/views/PrintfCourse.vue'; 
 const routes = [
   {
     path: '/',
@@ -23,6 +23,11 @@ const routes = [
     path: '/enrollCourse',
     name: 'EnrollCourse',
     component: EnrollCourse,
+  },
+  {
+    path: '/printfCourse',
+    name: 'PrintfCourse',
+    component: PrintfCourse,
   },
 ];
 
