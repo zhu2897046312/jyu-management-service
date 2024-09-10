@@ -10,7 +10,6 @@ import (
 type UserCourse struct {
 	Account    string `gorm:"not null" json:"account"`    // 学号
 	CourseCode string `gorm:"not null" json:"course_code"` // 课程代码
-	Status     int    `gorm:"not null" json:"status"`     // 选课状态码
 }
 
 func init() {
@@ -80,6 +79,12 @@ func (u *UserCourse) EnrollCourse(account string, courseCode string) error {
 	}
 
 	return nil
+}
+
+// 退选
+func (u *UserCourse)UnenrollCourse() *gorm.DB{
+	// 先检查该课程是否存在
+	return utils.DB_MySQL.Model(&UserCourse{}).Where("account = ? AND course_code = ?", u.Account,u.CourseCode).Delete(&UserCourse{})
 }
 
 

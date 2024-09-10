@@ -6,6 +6,10 @@ import EnrollCourse from '@/views/EnrollCourse.vue';
 
 const routes = [
   {
+    path: '/',
+    redirect: '/login',  // 访问 '/' 时重定向到 '/login'
+  },
+  {
     path: '/login',
     name: 'Login',
     component: Login,

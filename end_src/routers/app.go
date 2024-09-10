@@ -29,5 +29,6 @@ func Router() *gin.Engine{
 	r.POST("/admin/Register",service.Register)
 
     r.POST("/admin/EnrollCourse",service.EnrollCourseHandler)
+    r.POST("/admin/UnenrollCourse",service.UnenrollCourseHandler)
 	return r
 }

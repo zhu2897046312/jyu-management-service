@@ -68,7 +68,17 @@
                   <td>{{ course.teaching_mode }}</td>
                   <td>{{ course.choosed_number }} / {{ course.max_student_number }}</td>
                   <td>
-                    <button class="action-btn" @click="selectCourse(course.course_code)">选课</button>
+                    <!--<button class="action-btn" 
+                      @click="selectCourse(course.course_code)">
+                      选课</button>
+                    -->
+                    <!-- 动态显示按钮文本和样式 -->
+                    <button
+                      :class="['action-btn', { 'unenroll-btn': getCourseStatus(course.course_code) === '已选' }]"
+                      @click="handleCourseAction(course.course_code)"
+                    >
+                      {{ getCourseStatus(course.course_code) === '已选' ? '退选' : '选课' }}
+                    </button>  
                   </td>
                 </tr>
               </tbody>
@@ -89,13 +99,7 @@ export default {
       status: '未选',  // 初始状态
       selectedTags: [], // 保存已选标签
       courses: [],
-      courseStatuses: [
-        {course_code:"cs101",status: 1},
-        {course_code:"CS103",status: 1},
-        {course_code:"CS104",status: 1},
-        {course_code:"CS105",status: 1},
-        {course_code:"CS106",status: 1},
-      ], // 课程状态
+      courseStatuses: [], // 课程状态
       categories: [
         {
           title: '年级',
@@ -193,10 +197,7 @@ export default {
   },
   mounted() {
     this.fetchCourses();
-    console.log(this.$store); // 打印 Vuex store 对象
-    console.log(this.$store.getters); // 打印所有的 getters
-    console.log(this.$store.getters.getLoginData); // 打印 loginData getter
-    console.log(this.$store.getters.getLoginData.account); // 打印 loginData getter
+    this.fetchStatus();
   },
   methods: {
     // 选择标签并添加到 selectedTags 中
@@ -221,7 +222,7 @@ export default {
     toggleDropdown(courseCode) {
       this.activeDropdown = this.activeDropdown === courseCode ? null : courseCode;
     },
-    fetchStatus() {
+    async fetchStatus() {
       const userCourseData = {
           account: this.$store.getters.getLoginData.account,  // 当前登录用户的学号
         };
@@ -236,17 +237,25 @@ export default {
         })
         .then(res => {
           console.log('成功', res.data);
-
+          this.courseStatuses = res.data;
         })
         .catch(err => {
           console.error('失败', err);
         });
     },
+    // 根据选课状态执行不同操作
+    handleCourseAction(courseCode) {
+      if (this.getCourseStatus(courseCode) === '已选') {
+        this.unenrollCourse(courseCode); // 退选
+      } else {
+        this.selectCourse(courseCode);   // 选课
+      }
+    },
+    // 选课方法
     selectCourse(courseCode) {
       const userCourseData = {
         account: this.$store.getters.getLoginData.account,  // 当前登录用户的学号
         course_code: courseCode,  // 选课的课程代码
-        status: 1
       };
 
       axios({
@@ -259,18 +268,33 @@ export default {
       })
       .then(res => {
         console.log('选课成功', res.data);
-
+        this.courseStatuses.push(userCourseData);
       })
       .catch(err => {
         console.error('选课失败', err);
       });
+    },
+    // 退选方法
+    async unenrollCourse(courseCode) {
+      const userCourseData = {
+        account: this.$store.getters.getLoginData.account, // 当前登录用户的学号
+        course_code: courseCode, // 退选的课程代码
+      };
+
+      try {
+        const res = await axios.post('http://localhost:8081/admin/UnenrollCourse', userCourseData);
+        console.log('退选成功', res.data);
+        this.courseStatuses = this.courseStatuses.filter(item => item.course_code !== courseCode); // 退选成功后更新状态
+      } catch (err) {
+        console.error('退选失败', err);
+      }
     },
     getCourseStatus(courseCode) {
       const courseStatus = this.courseStatuses.find(item => item.course_code === courseCode);
       
       if (courseStatus) {
         // 如果找到对应的 course_code，判断 status
-        return courseStatus.status === 1 ? '已选' : '未选';
+        return  '已选' ;
       } else {
         // 如果未找到对应的 course_code，返回默认值 '未选'
         return '未选';
@@ -357,7 +381,7 @@ export default {
         '客家文化': 5,'创新创业': 6
       };
       return affiliations[value] || null;
-    }
+    },
   },
 };
 </script>
@@ -522,6 +546,11 @@ export default {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+/* 已选课程的按钮样式 */
+.unenroll-btn {
+  background-color: red; /* 退选时按钮变为红色 */
 }
 
 .action-btn:hover {

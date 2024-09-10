@@ -3,7 +3,7 @@ import { createStore } from 'vuex';
 
 export default createStore({
   state: {
-    loginData: {
+    loginData: JSON.parse(localStorage.getItem('loginData')) || {  // 从 localStorage 中恢复数据
       account: '',
       password: ''
     }
@@ -11,11 +11,11 @@ export default createStore({
   mutations: {
     setAccount(state, account) {
       state.loginData.account = account;
-      console.log(state.loginData.account);
+      localStorage.setItem('loginData', JSON.stringify(state.loginData));  // 每次修改时更新 localStorage
     },
     setPassword(state, password) {
       state.loginData.password = password;
-      console.log(state.loginData.password);
+      localStorage.setItem('loginData', JSON.stringify(state.loginData));  // 每次修改时更新 localStorage
     }
   },
   actions: {
