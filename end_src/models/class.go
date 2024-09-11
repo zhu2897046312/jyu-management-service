@@ -90,8 +90,8 @@ func (u *CourseInformation) Insert(employee *CourseInformation) *gorm.DB {
 	return utils.DB_MySQL.Model(&CourseInformation{}).Create(employee)
 }
 
-func (u *CourseInformation) FindByCourseCode(user *CourseInformation) *gorm.DB {
-	return utils.DB_MySQL.Model(&CourseInformation{}).Where("course_code = ?", user.CourseCode).Find(&user)
+func (u *CourseInformation) FindByCourseCode() *gorm.DB {
+	return utils.DB_MySQL.Model(&CourseInformation{}).Where("course_code = ?", u.CourseCode).Find(&u)
 }
 
 func (u *CourseInformation) Update(employee *CourseInformation) *gorm.DB {

@@ -63,6 +63,7 @@ func GetAllCoursesHandler(c *gin.Context)	{
 	c.JSON(http.StatusOK, courses)
 }
 
+// 获取某一用户的选课记录
 func GetCourseByAccountHandle(c *gin.Context){
 	var req models.UserCourse
 
@@ -95,4 +96,45 @@ func DynamicQueryHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, results)
+}
+
+// 查询用户选课信息
+func GetUserCourseInformationHandler(c *gin.Context) {
+	// 获取查询参数中的 account 值
+    account := c.Query("account")
+    
+    if account == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "缺少 account 参数"})
+        return
+    }
+
+    // 根据学号查询选课信息
+    var req models.UserCourse
+    req.Account = account
+
+    arr, db := req.GetByAccount(req.Account)
+    if db.Error != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error": db.Error.Error(),
+        })
+        return
+    }
+
+	// 遍历用户选的课程，根据 CourseCode 查询课程详细信息
+    var courses []models.CourseInformation
+	for _, userCourse := range arr {
+        var course models.CourseInformation
+		course.CourseCode = userCourse.CourseCode
+        result := course.FindByCourseCode()
+        if result.Error != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{
+                "error": result.Error.Error(),
+            })
+            return
+        }
+        courses = append(courses, course)
+    }
+
+    // 返回查询到的选课信息
+    c.JSON(http.StatusOK, courses)
 }

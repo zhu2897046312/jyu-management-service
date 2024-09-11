@@ -8,38 +8,38 @@ import (
 
 // 账号
 type UserAccount struct {
-	Account  string `gorm:"primaryKey;not null;" json:"Account"` // 学号
-	Password string `gorm:"not null" json:"Password"`            // 密码
-	ChatType int    `gorm:"not null" json:"ChatType"`            // 账户类型 学生 、 教师 、 管理员
+	Account  string `gorm:"primaryKey;not null;" json:"account"` // 学号
+	Password string `gorm:"not null" json:"password"`            // 密码
+	ChatType int    `gorm:"not null" json:"chat_type"`           // 账户类型 学生 、 教师 、 管理员
 }
 
 // 基本信息
 type UserBasicInformation struct {
-	Account              string `gorm:"primaryKey;not null;"` // 学号
-	Name                 string `gorm:"not null"`             // 姓名
-	Sex                  int    `gorm:"not null"`             // 性别
-	IdentificationNumber string `gorm:"not null"`             // 身份证号
-	Birthday             string `gorm:"not null"`             // 出生日期
-	EthnicGroup          string `gorm:"not null"`             // 民族
-	IdentificationType   string `gorm:"not null"`             // 证件类型
+	Account              string `gorm:"primaryKey;not null;" json:"account"`   // 学号
+	Name                 string `gorm:"not null" json:"name"`                  // 姓名
+	Sex                  int    `gorm:"not null" json:"sex"`                   // 性别
+	IdentificationNumber string `gorm:"not null" json:"identification_number"` // 身份证号
+	Birthday             string `gorm:"not null" json:"birthday"`              // 出生日期
+	EthnicGroup          string `gorm:"not null" json:"ethnic_group"`          // 民族
+	IdentificationType   string `gorm:"not null" json:"identification_type"`   // 证件类型
 }
 
 // 学籍信息
 type StudentStatusInformation struct {
-	Account            string `gorm:"primaryKey;not null;"` // 学号
-	Grade              string `gorm:"not null"`             // 年级
-	AcademyName        string `gorm:"not null"`             // 学院名称
-	ClassName          string `gorm:"not null"`             // 班级名称
-	ProfessionalName   string `gorm:"not null"`             // 专业名称
-	Status             string `gorm:"not null"`             // 学籍状态
-	IsInSchool         bool   `gorm:"not null"`             // 是否在校
-	RegistrationStatus string `gorm:"not null"`             // 报到注册状态
-	EducationalLevel   string `gorm:"not null"`             // 学历层次
-	CultivationMethod  string `gorm:"not null"`             // 培养方式
-	CultivationLevel   int    `gorm:"not null"`             // 培养层次
-	StudentType        int    `gorm:"not null"`             // 学生类别
-	CheckInTime        string `gorm:"not null"`             // 报到时间
-	RegistrationTime   string `gorm:"not null"`             // 注册时间
+	Account            string `gorm:"primaryKey;not null;" json:"account"` // 学号
+	Grade              string `gorm:"not null"`                            // 年级
+	AcademyName        string `gorm:"not null"`                            // 学院名称
+	ClassName          string `gorm:"not null"`                            // 班级名称
+	ProfessionalName   string `gorm:"not null"`                            // 专业名称
+	Status             string `gorm:"not null"`                            // 学籍状态
+	IsInSchool         bool   `gorm:"not null"`                            // 是否在校
+	RegistrationStatus string `gorm:"not null"`                            // 报到注册状态
+	EducationalLevel   string `gorm:"not null"`                            // 学历层次
+	CultivationMethod  string `gorm:"not null"`                            // 培养方式
+	CultivationLevel   int    `gorm:"not null"`                            // 培养层次
+	StudentType        int    `gorm:"not null"`                            // 学生类别
+	CheckInTime        string `gorm:"not null"`                            // 报到时间
+	RegistrationTime   string `gorm:"not null"`                            // 注册时间
 }
 
 // 联系方式
@@ -124,7 +124,7 @@ func (u *UserBasicInformation) Insert(employee *UserBasicInformation) *gorm.DB {
 	return utils.DB_MySQL.Model(&UserBasicInformation{}).Create(employee)
 }
 
-func (u *UserBasicInformation) FindByID(user *UserBasicInformation) *gorm.DB {
+func (u *UserBasicInformation) FindByAccount(user *UserBasicInformation) *gorm.DB {
 	return utils.DB_MySQL.Model(&UserBasicInformation{}).Where("account = ?", user.Account).Find(&user)
 }
 

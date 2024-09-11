@@ -3,6 +3,7 @@ package service
 import (
 	"jyu-service/models"
 	"fmt"
+	"net/http"
 	"github.com/gin-gonic/gin"
 )
 
@@ -99,4 +100,27 @@ func Register(c *gin.Context){
 		})
 		return
 	}
+}
+
+func GetUserInformationHandler(c *gin.Context){
+	// 获取查询参数中的 account 值
+    account := c.Query("account")
+    
+    if account == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "缺少 account 参数"})
+        return
+    }
+
+	var userInformation models.UserBasicInformation
+	userInformation.Account = account
+	// 查询数据库
+	db := userInformation.FindByAccount(&userInformation)
+    if db.Error!= nil{
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error": db.Error.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, userInformation)
 }
