@@ -4,9 +4,7 @@ import (
 	"log"
 	"os"
 	"time"
-	"context"
 	"path/filepath"
-	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -15,7 +13,6 @@ import (
 
 var (
 	DB_MySQL *gorm.DB
-	DB_Redis *redis.Client
 )
 
 func init(){
@@ -51,7 +48,7 @@ func InitMysql(){
 	)
 	log.Println(viper.GetString("mysql.dns"))
 
-	configPath := filepath.Join("../config")
+	configPath := filepath.Join("e:\\WorkSpace\\jyu-management-service\\end_src\\config")
     configFileName := "app"
 
 	dns := GetMysqlConfig(configPath, configFileName)
@@ -64,32 +61,5 @@ func InitMysql(){
 	DB_MySQL = db
 }
 
-func InitRedis() {
-	DB_Redis = redis.NewClient(&redis.Options{
-		Addr:         viper.GetString("redis.addr"),
-		Password:     viper.GetString("redis.password"),
-		DB:           viper.GetInt("redis.DB"),
-		PoolSize:     viper.GetInt("redis.poolSize"),
-		MinIdleConns: viper.GetInt("redis.minIdleConn"),
-	})
-}
-
-const (
-	PublishKey = "websocket"
-)
-
-// Publish 发布消息到redis
-func Publish(ctx context.Context, channel string, msg string) (error){
-	log.Println("Publish: " + msg)
-	err := DB_Redis.Publish(ctx, channel, msg).Err()
-	return err
-}
-// Subscribe 订阅消息
-func Subscribe(ctx context.Context, channel string) (string, error){
-	sub:= DB_Redis.Subscribe(ctx, channel)
-	msg, err := sub.ReceiveMessage(ctx)
-	log.Println("Subscribe: " , msg.Payload)
-	return msg.Payload, err
-}
 
 

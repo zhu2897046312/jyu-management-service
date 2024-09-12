@@ -2,24 +2,67 @@ package service
 
 import (
 	"jyu-service/models"
+	"jyu-service/utils"
 	"net/http"
+
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 )
 
 // 选课处理函数
 func EnrollCourseHandler(c *gin.Context) {
 	var req models.UserCourse
-	// 解析请求数据
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据"})
-		return
-	}
 
-	// 调用插入选课数据的函数
-	if err := req.EnrollCourse(req.Account, req.CourseCode); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "选课失败"})
-		return
-	}
+    //1. 解析请求数据
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据"})
+        return
+    }	
+    
+	// Redis 中缓存的课程信息 key
+	courseKey := "course:" + req.CourseCode
+    choosedNumberKey := courseKey + ":choosed_number"
+    maxStudentNumberKey := courseKey + ":max_student_number"
+
+	// 获取 Redis 中的已选人数
+    choosedNumber, err := utils.DB_Redis.Get(utils.Redis_Context, choosedNumberKey).Int()
+    if err == redis.Nil {
+        // 如果 Redis 中没有该课程的信息，查询 MySQL 并将数据放入 Redis
+        var course models.CourseInformation
+        if err := utils.DB_MySQL.Where("course_code = ?", req.CourseCode).First(&course).Error; err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "课程不存在"})
+            return
+        }
+        choosedNumber = course.ChoosedNumber
+        maxStudentNumber := course.MaxStudentNumber
+
+        // 将数据存入 Redis
+        utils.DB_Redis.Set(utils.Redis_Context, choosedNumberKey, choosedNumber, 0)
+        utils.DB_Redis.Set(utils.Redis_Context, maxStudentNumberKey, maxStudentNumber, 0)
+    } else if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Redis 读取失败"})
+        return
+    }
+
+	// 获取 Redis 中的最大人数
+    maxStudentNumber, err := utils.DB_Redis.Get(utils.Redis_Context, maxStudentNumberKey).Int()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Redis 读取失败"})
+        return
+    }
+
+	// 检查是否超过人数上限
+    if choosedNumber >= maxStudentNumber {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "课程人数已满"})
+        return
+    }
+
+	// 更新 Redis 中的已选人数
+    utils.DB_Redis.Incr(utils.Redis_Context, choosedNumberKey)
+
+	// 插入选课记录到 Redis
+    enrollmentKey := "enrollments:" + req.Account
+    utils.DB_Redis.SAdd(utils.Redis_Context, enrollmentKey, req.CourseCode)
 
 	c.JSON(http.StatusOK, gin.H{"message": "选课成功"})
 }
@@ -27,25 +70,22 @@ func EnrollCourseHandler(c *gin.Context) {
 func UnenrollCourseHandler(c *gin.Context) {
 	var req models.UserCourse
 
-	// 解析请求数据
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据"})
-		return
-	}
+    // 解析请求数据
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据"})
+        return
+    }
 
-	// 调用 UnenrollCourse 函数执行退课操作
-	if result := req.UnenrollCourse(); result.Error != nil {
-		// 如果退课操作出错
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "退课失败"})
-		return
-	} else if result.RowsAffected == 0 {
-		// 如果没有找到符合条件的记录
-		c.JSON(http.StatusNotFound, gin.H{"error": "未找到对应的选课记录"})
-		return
-	}
+    // 从 Redis 中移除选课记录
+    enrollmentKey := "enrollments:" + req.Account
+    utils.DB_Redis.SRem(utils.Redis_Context, enrollmentKey, req.CourseCode)
 
-	// 返回退课成功信息
-	c.JSON(http.StatusOK, gin.H{"message": "退课成功"})
+    // 更新 Redis 中的已选人数
+    courseKey := "course:" + req.CourseCode
+    choosedNumberKey := courseKey + ":choosed_number"
+    utils.DB_Redis.Decr(utils.Redis_Context, choosedNumberKey)
+
+    c.JSON(http.StatusOK, gin.H{"message": "退课成功"})
 }
 
 // 选课列表
