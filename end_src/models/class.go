@@ -3,7 +3,7 @@ package models
 import (
 	"fmt"
 	"jyu-service/utils"
-
+	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
@@ -43,6 +43,7 @@ type GradeInformation struct {
 	ExamNature   int     // 考试性质
 	GradeRemark  string  // 成绩备注
 }
+
 
 // 课程性质
 const (
@@ -167,6 +168,38 @@ func (u *CourseInformation) DynamicQuery(conditions map[string]interface{}) ([]C
 
 	return results, nil
 }
+
+// 获取课程的已选人数
+func (course *CourseInformation) GetCourseChoosedNumber() (int, error) {
+    // 构建 Redis 中存储已选人数的键
+    choosedNumberKey := "course:" + course.CourseCode + ":choosed_number"
+	maxStudentNumberKey := "course:" + course.CourseCode + ":max_student_number"
+
+    // 尝试从 Redis 中获取已选人数
+    choosedNumber, err := utils.DB_Redis.Get(utils.Redis_Context, choosedNumberKey).Int()
+    if err == redis.Nil {
+        // 如果 Redis 中没有相关记录，从 MySQL 获取
+        if err := utils.DB_MySQL.Where("course_code = ?", course.CourseCode).First(course).Error; err != nil {
+            return 0, fmt.Errorf("从 MySQL 获取课程数据失败: %v", err)
+        }
+
+        // 将 MySQL 中的已选人数缓存到 Redis
+        choosedNumber = course.ChoosedNumber
+		maxStudentNumber := course.MaxStudentNumber
+
+        err := utils.DB_Redis.Set(utils.Redis_Context, choosedNumberKey, choosedNumber, 0).Err()
+		utils.DB_Redis.Set(utils.Redis_Context, maxStudentNumberKey, maxStudentNumber, 0)
+        if err != nil {
+            return 0, fmt.Errorf("缓存课程已选人数到 Redis 失败: %v", err)
+        }
+    } else if err != nil {
+        return 0, fmt.Errorf("从 Redis 获取已选人数失败: %v", err)
+    }
+
+    // 返回已选人数
+    return choosedNumber, nil
+}
+
 
 // 成绩信息
 

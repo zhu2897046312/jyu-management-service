@@ -9,6 +9,16 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+// 请求体结构
+type ChoosedNumbersRequest struct {
+    CourseCodes []string `json:"courseCodes"`
+}
+
+// 响应体结构
+type ChoosedNumbersResponse struct {
+    ChoosedNumbers map[string]int `json:"choosedNumbers"`
+}
+
 // 选课处理函数
 func EnrollCourseHandler(c *gin.Context) {
 	var req models.UserCourse
@@ -46,7 +56,17 @@ func EnrollCourseHandler(c *gin.Context) {
 
 	// 获取 Redis 中的最大人数
     maxStudentNumber, err := utils.DB_Redis.Get(utils.Redis_Context, maxStudentNumberKey).Int()
-    if err != nil {
+    if err == redis.Nil {
+        // 如果 Redis 中没有该课程的信息，查询 MySQL 并将数据放入 Redis
+        var course models.CourseInformation
+        if err := utils.DB_MySQL.Where("course_code = ?", req.CourseCode).First(&course).Error; err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "课程不存在"})
+            return
+        }
+        maxStudentNumber = course.MaxStudentNumber
+
+        utils.DB_Redis.Set(utils.Redis_Context, maxStudentNumberKey, maxStudentNumber, 0)
+    } else if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Redis 读取失败"})
         return
     }
@@ -113,14 +133,48 @@ func GetCourseByAccountHandle(c *gin.Context){
 		return
 	}
 
-	arr , db := req.GetByAccount(req.Account)
-	if db.Error!= nil{
-        c.JSON(http.StatusInternalServerError, gin.H{
-            "error": db.Error.Error(),
-        })
-    }
+	// 生成 Redis 键
+	redisKey := "enrollments:" + req.Account
 
-	c.JSON(http.StatusOK, arr)
+	// 从 Redis 获取用户的选课记录
+	courseCodes, err := utils.DB_Redis.SMembers(utils.Redis_Context, redisKey).Result()
+	if err != nil {
+		// 处理错误
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "从 Redis 获取选课记录失败"})
+		return
+	}
+
+	if len(courseCodes) > 0 {
+		// 如果 Redis 中有数据，构造 UserCourse 列表
+		courses := make([]models.UserCourse, len(courseCodes))
+		for i, code := range courseCodes {
+			courses[i] = models.UserCourse{Account: req.Account, CourseCode: code}
+		}
+		c.JSON(http.StatusOK, courses)
+		return
+	}
+
+	// 如果 Redis 中没有数据，从 MySQL 查询
+	var userCourses []models.UserCourse
+	result := utils.DB_MySQL.Where("account = ?", req.Account).Find(&userCourses)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	// 将 MySQL 查询结果缓存到 Redis
+	redisData := make([]string, len(userCourses))
+	for i, course := range userCourses {
+		redisData[i] = course.CourseCode
+	}
+	if err := utils.DB_Redis.SAdd(utils.Redis_Context, redisKey, redisData).Err(); err != nil {
+		// 处理错误
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "缓存数据到 Redis 失败"})
+		return
+	}
+
+	// 返回查询结果
+	c.JSON(http.StatusOK, userCourses)
 }
 
 func DynamicQueryHandler(c *gin.Context) {
@@ -177,4 +231,36 @@ func GetUserCourseInformationHandler(c *gin.Context) {
 
     // 返回查询到的选课信息
     c.JSON(http.StatusOK, courses)
+}
+
+func GetCourseChoosedNumberHandler(c *gin.Context) {
+    var req ChoosedNumbersRequest
+
+    // 解析请求体
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求数据"})
+        return
+    }
+
+    choosedNumbers := make(map[string]int)
+
+    // 遍历 CourseCode 列表，获取每个课程的 ChoosedNumber
+    for _, courseCode := range req.CourseCodes {
+        var course models.CourseInformation
+        course.CourseCode = courseCode
+
+        // 调用 GetCourseChoosedNumber 函数获取已选人数
+        choosedNumber, err := course.GetCourseChoosedNumber()
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "获取已选人数失败"})
+            return
+        }
+
+        choosedNumbers[courseCode] = choosedNumber
+    }
+
+    // 返回响应
+    c.JSON(http.StatusOK, ChoosedNumbersResponse{
+        ChoosedNumbers: choosedNumbers,
+    })
 }

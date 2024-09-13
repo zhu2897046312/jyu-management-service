@@ -99,6 +99,7 @@ export default {
       status: '未选',  // 初始状态
       selectedTags: [], // 保存已选标签
       courses: [],
+      choosedNumbers: [],
       courseStatuses: [], // 课程状态
       categories: [
         {
@@ -196,10 +197,29 @@ export default {
     };
   },
   mounted() {
+    //this.loadCourses();
     this.fetchCourses();
     this.fetchStatus();
+
+    // 每 3 秒执行一次请求
+    this.intervalId = setInterval(this.fetchChoosedNumbers, 3000);
+  },
+  beforeDestroy() {
+    // 组件销毁时清除定时器
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
   },
   methods: {
+    // 从本地存储加载课程数据
+    // loadCourses() {
+    //   const cachedCourses = localStorage.getItem('courses');
+    //   if (cachedCourses) {
+    //     this.courses = JSON.parse(cachedCourses);
+    //   } else {
+    //     this.fetchCourses();
+    //   }
+    // },
     // 选择标签并添加到 selectedTags 中
     selectTag(key, value) {
       const tag = `${key}:${value}`; // 使用下划线作为分隔符
@@ -215,6 +235,7 @@ export default {
       try {
         const response = await axios.get('http://localhost:8081/admin/GetAll');
         this.courses = response.data;
+        //localStorage.setItem('courses', JSON.stringify(this.courses)); // 缓存课程数据
       } catch (error) {
         console.error('获取课程数据失败:', error);
       }
@@ -242,6 +263,23 @@ export default {
         .catch(err => {
           console.error('失败', err);
         });
+    },
+    fetchChoosedNumbers() {
+      // 提取 CourseCode 并发送到后台
+  const courseCodes = this.courses.map(course => course.course_code);
+
+axios.post('http://localhost:8081/api/getChoosedNumbers', { courseCodes })
+  .then(response => {
+    const choosedNumbers = response.data.choosedNumbers;
+
+    // 遍历 courses，并更新 choosed_number
+    this.courses.forEach(course => {
+      course.choosed_number = choosedNumbers[course.course_code] || 0; // 没有数据则默认为 0
+    });
+  })
+  .catch(error => {
+    console.error("获取选课人数失败: ", error);
+  });
     },
     // 根据选课状态执行不同操作
     handleCourseAction(courseCode) {
@@ -284,21 +322,18 @@ export default {
       try {
         const res = await axios.post('http://localhost:8081/admin/UnenrollCourse', userCourseData);
         console.log('退选成功', res.data);
-        this.courseStatuses = this.courseStatuses.filter(item => item.course_code !== courseCode); // 退选成功后更新状态
+        // 确保响应式删除课程
+      const courseIndex = this.courseStatuses.findIndex(item => item.course_code === courseCode);
+      if (courseIndex !== -1) {
+        this.$delete(this.courseStatuses, courseIndex); // 响应式删除
+      }
       } catch (err) {
         console.error('退选失败', err);
       }
     },
     getCourseStatus(courseCode) {
-      const courseStatus = this.courseStatuses.find(item => item.course_code === courseCode);
-      
-      if (courseStatus) {
-        // 如果找到对应的 course_code，判断 status
-        return  '已选' ;
-      } else {
-        // 如果未找到对应的 course_code，返回默认值 '未选'
-        return '未选';
-      }
+       // 如果在 courseStatuses 中找到对应的 course_code，则表示已选，否则未选
+    return this.courseStatuses.some(item => item.course_code === courseCode) ? '已选' : '未选';
     },
     performSearch(){
       const conditions = {};
@@ -550,10 +585,13 @@ export default {
 
 /* 已选课程的按钮样式 */
 .unenroll-btn {
-  background-color: red; /* 退选时按钮变为红色 */
+  background-color: red;
 }
 
 .action-btn:hover {
   background-color: #0056b3;
+}
+.unenroll-btn:hover {
+  background-color: red; /* 退选按钮 hover 颜色 */
 }
 </style>
