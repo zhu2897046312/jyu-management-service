@@ -4,6 +4,7 @@ import Index from '@/views/Index.vue';
 import Login from '@/views/Login.vue'; 
 import EnrollCourse from '@/views/EnrollCourse.vue'; 
 import PrintfCourse from '@/views/PrintfCourse.vue'; 
+import UserInformation from '@/views/UserInformation.vue'; 
 const routes = [
   {
     path: '/',
@@ -29,6 +30,11 @@ const routes = [
     name: 'PrintfCourse',
     component: PrintfCourse,
   },
+  {
+    path: '/userInformation',
+    name: 'UserInformation',
+    component: UserInformation,
+  }
 ];
 
 const router = createRouter({

@@ -99,7 +99,8 @@ export default {
     // 映射对象，将 option 值映射到路由名称
     const routeMap = {
       '自主选课': 'EnrollCourse',
-      '个人课表查询': 'PrintfCourse'
+      '个人课表查询': 'PrintfCourse',
+      '查询个人信息': 'UserInformation'
       // 添加更多映射
     };
 

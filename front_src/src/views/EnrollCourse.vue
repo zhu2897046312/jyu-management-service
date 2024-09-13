@@ -201,8 +201,11 @@ export default {
     this.fetchCourses();
     this.fetchStatus();
 
-    // 每 3 秒执行一次请求
-    this.intervalId = setInterval(this.fetchChoosedNumbers, 3000);
+      // 每 1 分钟执行一次请求
+    if (this.intervalId) {
+      clearInterval(this.intervalId); // 确保不会有重复的定时器
+    }
+    this.intervalId = setInterval(this.fetchChoosedNumbers, 60000);
   },
   beforeDestroy() {
     // 组件销毁时清除定时器

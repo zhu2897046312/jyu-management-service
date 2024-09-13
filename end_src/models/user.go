@@ -2,6 +2,7 @@ package models
 
 import (
 	"jyu-service/utils"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -15,59 +16,74 @@ type UserAccount struct {
 
 // 基本信息
 type UserBasicInformation struct {
-	Account              string `gorm:"primaryKey;not null;" json:"account"`   // 学号
-	Name                 string `gorm:"not null" json:"name"`                  // 姓名
-	Sex                  int    `gorm:"not null" json:"sex"`                   // 性别
-	IdentificationNumber string `gorm:"not null" json:"identification_number"` // 身份证号
-	Birthday             string `gorm:"not null" json:"birthday"`              // 出生日期
-	EthnicGroup          string `gorm:"not null" json:"ethnic_group"`          // 民族
-	IdentificationType   string `gorm:"not null" json:"identification_type"`   // 证件类型
+	Account              string `gorm:"primaryKey;not null;" json:"account"` // 学号
+	Name                 string `json:"name"`                                // 姓名
+	Sex                  int    `json:"sex"`                                 // 性别
+	IdentificationNumber string `json:"identification_number"`               // 身份证号
+	Birthday             string `json:"birthday"`                            // 出生日期
+	EthnicGroup          string `json:"ethnic_group"`                        // 民族
+	IdentificationType   string `json:"identification_type"`                 // 证件类型
+	OldName              string `json:"old_name"`                            // 曾用名
+	PoliticalOutlook     string `json:"political_outlook"`                   // 政治面貌
+	EnrollmentDates      string `json:"enrollment_dates"`                    // 入学日期
 }
 
 // 学籍信息
 type StudentStatusInformation struct {
 	Account            string `gorm:"primaryKey;not null;" json:"account"` // 学号
-	Grade              string `gorm:"not null"`                            // 年级
-	AcademyName        string `gorm:"not null"`                            // 学院名称
-	ClassName          string `gorm:"not null"`                            // 班级名称
-	ProfessionalName   string `gorm:"not null"`                            // 专业名称
-	Status             string `gorm:"not null"`                            // 学籍状态
-	IsInSchool         bool   `gorm:"not null"`                            // 是否在校
-	RegistrationStatus string `gorm:"not null"`                            // 报到注册状态
-	EducationalLevel   string `gorm:"not null"`                            // 学历层次
-	CultivationMethod  string `gorm:"not null"`                            // 培养方式
-	CultivationLevel   int    `gorm:"not null"`                            // 培养层次
-	StudentType        int    `gorm:"not null"`                            // 学生类别
-	CheckInTime        string `gorm:"not null"`                            // 报到时间
-	RegistrationTime   string `gorm:"not null"`                            // 注册时间
+	Grade              string `gorm:"not null" json:"grade"`               // 年级
+	AcademyName        string `gorm:"not null" json:"academy_name"`        // 学院名称
+	ClassName          string `gorm:"not null" json:"class_name"`          // 班级名称
+	ProfessionalName   string `gorm:"not null" json:"account"`             // 专业名称
+	Status             string `gorm:"not null" json:"account"`             // 学籍状态
+	IsInSchool         bool   `gorm:"not null" json:"account"`             // 是否在校
+	RegistrationStatus string `gorm:"not null" json:"account"`             // 报到注册状态
+	EducationalLevel   string `gorm:"not null" json:"account"`             // 学历层次
+	CultivationMethod  string `gorm:"not null" json:"account"`             // 培养方式
+	CultivationLevel   int    `gorm:"not null" json:"account"`             // 培养层次
+	StudentType        int    `gorm:"not null" json:"account"`             // 学生类别
+	CheckInTime        string `gorm:"not null" json:"account"`             // 报到时间
+	RegistrationTime   string `gorm:"not null" json:"account"`             // 注册时间
 }
 
 // 联系方式
 type ContactInformation struct {
-	Account               string `gorm:"primaryKey;not null;"` // 学号
-	CorrespondenceAddress string `gorm:"not null"`             // 通讯地址
-	Phone                 string `gorm:"not null"`             // 手机号码
-	Email                 string // 电子邮箱
-	Landline              string // 固定电话
-	PostCode              string // 邮政编码
+	Account               string `gorm:"primaryKey;not null;" json:"account"`     // 学号
+	CorrespondenceAddress string `gorm:"not null" json:"ccorrespondence_address"` // 通讯地址
+	Phone                 string `gorm:"not null" json:"phone"`                   // 手机号码
+	Email                 string `gorm:"not null" json:"email"`                   // 电子邮箱
+	Landline              string `gorm:"not null" json:"landline"`                // 固定电话
+	PostCode              string `gorm:"not null" json:"post_code"`               // 邮政编码
+	HomeAddress           string `gorm:"not null" json:"home_address"`            // 家庭地址
 }
 
 func init() {
-	err := utils.DB_MySQL.AutoMigrate(&UserAccount{})
-	if err != nil {
-		panic(err)
+	// 自动迁移 UserAccount
+	if err := utils.DB_MySQL.AutoMigrate(&UserAccount{}); err != nil {
+		log.Fatalf("Failed to migrate UserAccount: %v", err)
+	} else {
+		log.Println("UserAccount table migrated successfully")
 	}
-	err = utils.DB_MySQL.AutoMigrate(&UserBasicInformation{})
-	if err != nil {
-		panic(err)
+
+	// 自动迁移 UserBasicInformation
+	if err := utils.DB_MySQL.AutoMigrate(&UserBasicInformation{}); err != nil {
+		log.Fatalf("Failed to migrate UserBasicInformation: %v", err)
+	} else {
+		log.Println("UserBasicInformation table migrated successfully")
 	}
-	err = utils.DB_MySQL.AutoMigrate(&StudentStatusInformation{})
-	if err != nil {
-		panic(err)
+
+	// 自动迁移 StudentStatusInformation
+	if err := utils.DB_MySQL.AutoMigrate(&StudentStatusInformation{}); err != nil {
+		log.Fatalf("Failed to migrate StudentStatusInformation: %v", err)
+	} else {
+		log.Println("StudentStatusInformation table migrated successfully")
 	}
-	err = utils.DB_MySQL.AutoMigrate(&ContactInformation{})
-	if err != nil {
-		panic(err)
+
+	// 自动迁移 ContactInformation
+	if err := utils.DB_MySQL.AutoMigrate(&ContactInformation{}); err != nil {
+		log.Fatalf("Failed to migrate ContactInformation: %v", err)
+	} else {
+		log.Println("ContactInformation table migrated successfully")
 	}
 }
 
@@ -188,7 +204,7 @@ func (u *ContactInformation) Insert(employee *ContactInformation) *gorm.DB {
 	return utils.DB_MySQL.Model(&ContactInformation{}).Create(employee)
 }
 
-func (u *ContactInformation) FindByID(user *ContactInformation) *gorm.DB {
+func (u *ContactInformation) FindByAccount(user *ContactInformation) *gorm.DB {
 	return utils.DB_MySQL.Model(&ContactInformation{}).Where("account = ?", user.Account).Find(&user)
 }
 

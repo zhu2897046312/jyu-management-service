@@ -124,3 +124,26 @@ func GetUserInformationHandler(c *gin.Context){
 
     c.JSON(http.StatusOK, userInformation)
 }
+
+func GetContactInformationHandler(c *gin.Context) {
+	// 获取查询参数中的 account 值
+    account := c.Query("account")
+    
+    if account == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "缺少 account 参数"})
+        return
+    }
+
+	var userInformation models.ContactInformation
+	userInformation.Account = account
+	// 查询数据库
+	db := userInformation.FindByAccount(&userInformation)
+    if db.Error!= nil{
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error": db.Error.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, userInformation)
+}
