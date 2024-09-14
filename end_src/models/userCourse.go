@@ -2,16 +2,19 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"jyu-service/utils"
 	"strings"
-	"fmt"
 	"time"
+
 	"gorm.io/gorm"
 )
 
 type UserCourse struct {
-	Account    string `gorm:"not null" json:"account"`    // 学号
-	CourseCode string `gorm:"not null" json:"course_code"` // 课程代码
+	ID          int    `gorm:"primaryKey;autoIncrement" json:"id"`   // 自增主键
+	Account     string `gorm:"not null" json:"account"`              // 学号
+	CourseCode  string `gorm:"not null" json:"course_code"`          // 课程代码
+	CourseGrade string `json:"course_grade"`         // 成绩
 }
 
 func init() {
@@ -84,9 +87,9 @@ func (u *UserCourse) EnrollCourse(account string, courseCode string) error {
 }
 
 // 退选
-func (u *UserCourse)UnenrollCourse() *gorm.DB{
+func (u *UserCourse) UnenrollCourse() *gorm.DB {
 	// 先检查该课程是否存在
-	return utils.DB_MySQL.Model(&UserCourse{}).Where("account = ? AND course_code = ?", u.Account,u.CourseCode).Delete(&UserCourse{})
+	return utils.DB_MySQL.Model(&UserCourse{}).Where("account = ? AND course_code = ?", u.Account, u.CourseCode).Delete(&UserCourse{})
 }
 
 // 提取账户信息的函数

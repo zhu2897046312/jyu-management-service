@@ -173,3 +173,4 @@ func GetStudentStatusInformationHandler(c *gin.Context) {
 
     c.JSON(http.StatusOK, userInformation)
 }
+

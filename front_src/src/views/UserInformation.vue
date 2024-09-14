@@ -24,6 +24,7 @@ import BasicInfo from '../components/UserInformation/BasicInfo.vue'
 import ContactInfo from '../components/UserInformation/ContactInfo.vue';
 import StudentStatusInfo from '../components/UserInformation/StudentStatusInfo.vue';
 import EnrollCourseInfo from '../components/UserInformation/EnrollCourseInfo.vue';
+import GradeInfo from '../components/UserInformation/GradeInfo.vue';
 // import StudentAcademicInfo from '@/components/UserInformation/StudentAcademicInfo.vue';
 // import OtherInfo from '@/components/UserInformation/OtherInfo.vue';
 // import RewardInfo from '@/components/UserInformation/RewardInfo.vue';
@@ -64,7 +65,7 @@ export default {
                     this.activeComponent = 'RewardInfo';
                     break;
                 case "成绩信息":
-                    this.activeComponent = 'GradesInfo';
+                    this.activeComponent = 'GradeInfo';
                     break;
                 case "选课信息":
                     this.activeComponent = 'EnrollCourseInfo';
@@ -88,6 +89,7 @@ export default {
         ContactInfo,
         StudentStatusInfo,
         EnrollCourseInfo,
+        GradeInfo,
         // OtherInfo,
         // RewardInfo,
         // GradesInfo,

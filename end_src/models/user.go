@@ -31,7 +31,7 @@ type UserBasicInformation struct {
 // 学籍信息
 type StudentStatusInformation struct {
 	Account            string `gorm:"primaryKey;not null;" json:"account"` // 学号
-	Grade              string `gorm:"not null" json:"grade"`               // 年级
+	AcademicYear       string `json:"academic_year"`                       // 年级
 	AcademyName        string `gorm:"not null" json:"academy_name"`        // 学院名称
 	ClassName          string `gorm:"not null" json:"class_name"`          // 班级名称
 	ProfessionalName   string `gorm:"not null" json:"professional_name"`   // 专业名称
