@@ -34,16 +34,17 @@ type StudentStatusInformation struct {
 	Grade              string `gorm:"not null" json:"grade"`               // 年级
 	AcademyName        string `gorm:"not null" json:"academy_name"`        // 学院名称
 	ClassName          string `gorm:"not null" json:"class_name"`          // 班级名称
-	ProfessionalName   string `gorm:"not null" json:"account"`             // 专业名称
-	Status             string `gorm:"not null" json:"account"`             // 学籍状态
-	IsInSchool         bool   `gorm:"not null" json:"account"`             // 是否在校
-	RegistrationStatus string `gorm:"not null" json:"account"`             // 报到注册状态
-	EducationalLevel   string `gorm:"not null" json:"account"`             // 学历层次
-	CultivationMethod  string `gorm:"not null" json:"account"`             // 培养方式
-	CultivationLevel   int    `gorm:"not null" json:"account"`             // 培养层次
-	StudentType        int    `gorm:"not null" json:"account"`             // 学生类别
-	CheckInTime        string `gorm:"not null" json:"account"`             // 报到时间
-	RegistrationTime   string `gorm:"not null" json:"account"`             // 注册时间
+	ProfessionalName   string `gorm:"not null" json:"professional_name"`   // 专业名称
+	Status             string `gorm:"not null" json:"status"`              // 学籍状态
+	IsInSchool         bool   `gorm:"not null" json:"is_in_School"`        // 是否在校
+	RegistrationStatus string `gorm:"not null" json:"registration_status"` // 报到注册状态
+	EducationalLevel   string `gorm:"not null" json:"educational_level"`   // 学历层次
+	CultivationMethod  string `gorm:"not null" json:"cultivation_method"`  // 培养方式
+	CultivationLevel   int    `gorm:"not null" json:"cultivation_level"`   // 培养层次
+	StudentType        int    `gorm:"not null" json:"student_type"`        // 学生类别
+	CheckInTime        string `gorm:"not null" json:"check_in_time"`       // 报到时间
+	RegistrationTime   string `gorm:"not null" json:"registration_time"`   // 注册时间
+	Academic           int    `gorm:"not null" json:"academic"`            // 学制
 }
 
 // 联系方式
@@ -172,7 +173,7 @@ func (u *StudentStatusInformation) Insert(employee *StudentStatusInformation) *g
 	return utils.DB_MySQL.Model(&StudentStatusInformation{}).Create(employee)
 }
 
-func (u *StudentStatusInformation) FindByID(user *StudentStatusInformation) *gorm.DB {
+func (u *StudentStatusInformation) FindByAccount(user *StudentStatusInformation) *gorm.DB {
 	return utils.DB_MySQL.Model(&StudentStatusInformation{}).Where("account = ?", user.Account).Find(&user)
 }
 

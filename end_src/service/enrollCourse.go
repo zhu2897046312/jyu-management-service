@@ -87,6 +87,7 @@ func EnrollCourseHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "选课成功"})
 }
 
+// 退课处理函数 
 func UnenrollCourseHandler(c *gin.Context) {
 	var req models.UserCourse
 
@@ -233,6 +234,7 @@ func GetUserCourseInformationHandler(c *gin.Context) {
     c.JSON(http.StatusOK, courses)
 }
 
+// 获取课程已选人数
 func GetCourseChoosedNumberHandler(c *gin.Context) {
     var req ChoosedNumbersRequest
 

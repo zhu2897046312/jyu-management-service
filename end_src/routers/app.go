@@ -23,6 +23,8 @@ func Router() *gin.Engine{
     r.GET("/admin/GetUserCourseInfomation",service.GetUserCourseInformationHandler) 
     r.GET("/admin/GetUserInformation",service.GetUserInformationHandler)
     r.GET("/admin/GetContactInformation",service.GetContactInformationHandler)
+    r.GET("/admin/GetStudentStatusInformation",service.GetStudentStatusInformationHandler)
+    
     r.POST("/admin/courses",service.DynamicQueryHandler)
 
     r.POST("/api/getChoosedNumbers", service.GetCourseChoosedNumberHandler)

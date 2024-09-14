@@ -102,6 +102,7 @@ func Register(c *gin.Context){
 	}
 }
 
+// 查询用户基本信息
 func GetUserInformationHandler(c *gin.Context){
 	// 获取查询参数中的 account 值
     account := c.Query("account")
@@ -125,6 +126,7 @@ func GetUserInformationHandler(c *gin.Context){
     c.JSON(http.StatusOK, userInformation)
 }
 
+// 查询用户联系方式
 func GetContactInformationHandler(c *gin.Context) {
 	// 获取查询参数中的 account 值
     account := c.Query("account")
@@ -135,6 +137,30 @@ func GetContactInformationHandler(c *gin.Context) {
     }
 
 	var userInformation models.ContactInformation
+	userInformation.Account = account
+	// 查询数据库
+	db := userInformation.FindByAccount(&userInformation)
+    if db.Error!= nil{
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error": db.Error.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, userInformation)
+}
+
+// 查询用户学籍信息
+func GetStudentStatusInformationHandler(c *gin.Context) {
+	// 获取查询参数中的 account 值
+    account := c.Query("account")
+    
+    if account == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "缺少 account 参数"})
+        return
+    }
+
+	var userInformation models.StudentStatusInformation
 	userInformation.Account = account
 	// 查询数据库
 	db := userInformation.FindByAccount(&userInformation)

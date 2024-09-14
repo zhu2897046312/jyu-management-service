@@ -22,6 +22,8 @@
 // 导入需要动态加载的组件
 import BasicInfo from '../components/UserInformation/BasicInfo.vue'
 import ContactInfo from '../components/UserInformation/ContactInfo.vue';
+import StudentStatusInfo from '../components/UserInformation/StudentStatusInfo.vue';
+import EnrollCourseInfo from '../components/UserInformation/EnrollCourseInfo.vue';
 // import StudentAcademicInfo from '@/components/UserInformation/StudentAcademicInfo.vue';
 // import OtherInfo from '@/components/UserInformation/OtherInfo.vue';
 // import RewardInfo from '@/components/UserInformation/RewardInfo.vue';
@@ -50,7 +52,7 @@ export default {
                     this.activeComponent = 'BasicInfo';
                     break;
                 case "学籍信息":
-                    this.activeComponent = 'StudentAcademicInfo';
+                    this.activeComponent = 'StudentStatusInfo';
                     break;
                 case "其他信息":
                     this.activeComponent = 'OtherInfo';
@@ -65,7 +67,7 @@ export default {
                     this.activeComponent = 'GradesInfo';
                     break;
                 case "选课信息":
-                    this.activeComponent = 'CourseInfo';
+                    this.activeComponent = 'EnrollCourseInfo';
                     break;
                 case "培养方案":
                     this.activeComponent = 'TrainingPlan';
@@ -84,7 +86,8 @@ export default {
     components: {
         BasicInfo,
         ContactInfo,
-        // StudentAcademicInfo,
+        StudentStatusInfo,
+        EnrollCourseInfo,
         // OtherInfo,
         // RewardInfo,
         // GradesInfo,

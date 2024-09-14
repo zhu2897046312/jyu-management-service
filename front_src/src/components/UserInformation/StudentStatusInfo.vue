@@ -3,46 +3,40 @@
       <div class="left">
         <table>
           <tr>
-            <td class="label">姓名：</td>
-            <td>{{ UserBasicInformation.name }}</td>
-            <td class="label">曾用名：</td>
-            <td>{{UserBasicInformation.old_name}}</td>
+            <td class="label">年级：</td>
+            <td>{{ StudentStatusInformation.grade }}</td>
+            <td class="label">学院名称：</td>
+            <td>{{StudentStatusInformation.academy_name}}</td>
+            <td class="label">专业名称：</td>
+            <td>{{StudentStatusInformation.professional_name}}</td>
           </tr>
           <tr>
-            <td class="label">性别：</td>
-            <td>{{UserBasicInformation.sex}}</td>
-            <td class="label">证件类型：</td>
-            <td>{{UserBasicInformation.identification_type}}</td>
+            <td class="label">班级名称：</td>
+            <td>{{ StudentStatusInformation.class_name }}</td>
+            <td class="label">学制：</td>
+            <td>{{StudentStatusInformation.academic}}</td>
+            <td class="label">学籍状态：</td>
+            <td>{{StudentStatusInformation.status}}</td>
           </tr>
           <tr>
-            <td class="label">证件号码：</td>
-            <td>{{UserBasicInformation.identification_number}}</td>
-            <td class="label">出生日期：</td>
-            <td>{{UserBasicInformation.birthday}}</td>
+            <td class="label">是否在校：</td>
+            <td>{{ StudentStatusInformation.is_in_School }}</td>
+            <td class="label">报道注册状态：</td>
+            <td>{{StudentStatusInformation.registration_status}}</td>
+            <td class="label">注册时间：</td>
+            <td>{{StudentStatusInformation.registration_time}}</td>
           </tr>
           <tr>
-            <td class="label">民族：</td>
-            <td>{{UserBasicInformation.ethnic_group}}</td>
-            <td class="label">籍贯：</td>
-            <td>广东河源</td>
+            <td class="label">学历层次：</td>
+            <td>{{ StudentStatusInformation.educational_level }}</td>
+            <td class="label">培养方式：</td>
+            <td>{{StudentStatusInformation.cultivation_method}}</td>
+            <td class="label">培养层次：</td>
+            <td>{{StudentStatusInformation.cultivation_level}}</td>
           </tr>
           <tr>
-            <td class="label">政治面貌：</td>
-            <td>群众</td>
-            <td class="label">入学日期：</td>
-            <td>2022-09-12</td>
-          </tr>
-        </table>
-      </div>
-      <div class="right">
-        <table>
-          <tr>
-            <td class="label">照片1：</td>
-            <td class="photo">入学前</td>
-          </tr>
-          <tr>
-            <td class="label">照片2：</td>
-            <td class="photo">入学后</td>
+            <td class="label">学生类别：</td>
+            <td>{{ StudentStatusInformation.student_type }}</td>
           </tr>
         </table>
       </div>
@@ -55,30 +49,35 @@ import axios from 'axios';
 export default {
     data(){
         return {
-            UserBasicInformation:{
+          StudentStatusInformation:{
                 account: "",
-                name: "",
-                sex: "",
-                identification_number: "",
-                birthday: "",
-                ethnic_group: "",
-                identification_type: "",
-                old_name:"",
-                political_outlook:"",
-                enrollment_dates:"",
+                grade: "",
+                academy_name: "",
+                class_name: "",
+                professional_name: "",
+                academic: "",
+                status: "",
+                is_in_School: "",
+                registration_status:"",
+                educational_level:"",
+                cultivation_method:"",
+                cultivation_level:"",
+                student_type:"",
+                check_in_time:"",
+                registration_time:"",
             }
         }
     },
     mounted() {
-        this.fetchUserBasicInformations();
+        this.fetchStudentStatusInformations();
     },
     methods: {
-      fetchUserBasicInformations() {
+      fetchStudentStatusInformations() {
         const account = this.$store.getters.getLoginData.account;  // 当前登录用户的学号
         
         axios({
             method: 'GET',
-            url: 'http://localhost:8081/admin/GetUserInformation',
+            url: 'http://localhost:8081/admin/GetStudentStatusInformation',
             params: {
                 account: account  // 将学号作为查询参数
             },
@@ -88,7 +87,7 @@ export default {
         })
         .then(res => {
             console.log('成功', res.data);
-            this.UserBasicInformation = res.data;
+            this.StudentStatusInformation = res.data;
         })
         .catch(err => {
             console.error('失败', err);
