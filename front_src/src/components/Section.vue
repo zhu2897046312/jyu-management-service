@@ -100,7 +100,9 @@ export default {
     const routeMap = {
       '自主选课': 'EnrollCourse',
       '个人课表查询': 'PrintfCourse',
-      '查询个人信息': 'UserInformation'
+      '查询个人信息': 'UserInformation',
+      '学生成绩查询': 'GradeInfo',
+      "学生成绩总表打印": 'PrintGrades'
       // 添加更多映射
     };
 

@@ -322,7 +322,7 @@ func GetGradeInformationHandler(c *gin.Context) {
         }
 
         // 计算绩点（通过学分和成绩计算）
-        gradePoints := calculateGradePoints(userCourse.CourseGrade, course.Credits)
+        gradePoints := CalculateGradePoints(userCourse.CourseGrade, course.Credits)
 
         // 构建 GradeInfoResponse 对象
         gradeInfo := GradeInfoResponse{
@@ -346,7 +346,7 @@ func GetGradeInformationHandler(c *gin.Context) {
 }
 
 // 根据100分制成绩和学分计算绩点
-func calculateGradePoints(grade string, credits float32) float32 {
+func CalculateGradePoints(grade string, credits float32) float32 {
     // 将成绩从字符串转换为整数
     gradeScore, err := strconv.Atoi(grade)
     if err != nil {

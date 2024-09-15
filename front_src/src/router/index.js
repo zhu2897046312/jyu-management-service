@@ -4,7 +4,9 @@ import Index from '@/views/Index.vue';
 import Login from '@/views/Login.vue'; 
 import EnrollCourse from '@/views/EnrollCourse.vue'; 
 import PrintfCourse from '@/views/PrintfCourse.vue'; 
-import UserInformation from '@/views/UserInformation.vue'; 
+import UserInformation from '@/views/UserInformation.vue';
+import PrintGrades from '@/views/PrintGrades.vue'
+import GradeInfo from '../components/UserInformation/GradeInfo.vue';  
 const routes = [
   {
     path: '/',
@@ -34,7 +36,17 @@ const routes = [
     path: '/userInformation',
     name: 'UserInformation',
     component: UserInformation,
-  }
+  },
+  {
+    path: '/gradeInformation',
+    name: 'gradeInformation',
+    component: GradeInfo,
+  },
+  {
+    path: '/printGrades',
+    name: 'PrintGrades',
+    component: PrintGrades,
+  },
 ];
 
 const router = createRouter({
