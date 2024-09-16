@@ -21,6 +21,18 @@ func Router() *gin.Engine {
 	}))
 
 	r.GET("/admin/GetAll", service.GetAllCoursesHandler)
+
+
+	// r.GET("/admin/GetCourses",service.GetCourses)
+	// r.POST("/admin/UpdateCourses", service.UpdateCourses)
+	// r.POST("/admin/UpdateCourses/:courseCode", service.UpdateCourses)
+	// r.DELETE("/admin/DeleteCourses/:course_code",service.DeleteCourses)
+
+	r.GET("/admin/GetCourses", service.GetCourses)
+    r.PUT("/admin/UpdateCourses/:course_code", service.UpdateCourses)
+    r.POST("/admin/AddCourse", service.AddCourse)
+    r.DELETE("/admin/DeleteCourses/:course_code", service.DeleteCourses)
+
 	r.GET("/admin/GetUserCourseInfomation", service.GetUserCourseInformationHandler)
 	r.GET("/admin/GetUserInformation", service.GetUserInformationHandler)
 	r.GET("/admin/GetContactInformation", service.GetContactInformationHandler)

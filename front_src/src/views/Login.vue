@@ -62,8 +62,15 @@ export default {
         }
       }).then(res => {
         console.log(res.data); // 打印后端返回的数据
+        const chat_type = res.data.data
+        if (chat_type === 0) {
+          this.$router.push({ path: '/admin' })
+        } else if (chat_type === 1) {
+          this.$router.push({ path: '/index' })
+        }else{
+          this.$router.push({ path: '/teacher' })
+        }
         console.log("登录成功");
-        this.$router.push({ path: '/index' })
       }).catch(err => {
         console.log("登录失败");
       });

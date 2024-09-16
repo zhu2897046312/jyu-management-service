@@ -58,6 +58,12 @@ type ContactInformation struct {
 	HomeAddress           string `gorm:"not null" json:"home_address"`            // 家庭地址
 }
 
+const (
+	Administrator int = 0
+	Teacher       int = 1
+	Student       int = 2
+)
+
 func init() {
 	// 自动迁移 UserAccount
 	if err := utils.DB_MySQL.AutoMigrate(&UserAccount{}); err != nil {
