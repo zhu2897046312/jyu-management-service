@@ -49,13 +49,13 @@ type StudentStatusInformation struct {
 
 // 联系方式
 type ContactInformation struct {
-	Account               string `gorm:"primaryKey;not null;" json:"account"`     // 学号
-	CorrespondenceAddress string `gorm:"not null" json:"ccorrespondence_address"` // 通讯地址
-	Phone                 string `gorm:"not null" json:"phone"`                   // 手机号码
-	Email                 string `gorm:"not null" json:"email"`                   // 电子邮箱
-	Landline              string `gorm:"not null" json:"landline"`                // 固定电话
-	PostCode              string `gorm:"not null" json:"post_code"`               // 邮政编码
-	HomeAddress           string `gorm:"not null" json:"home_address"`            // 家庭地址
+	Account               string `gorm:"primaryKey;not null;" json:"account"`    // 学号
+	CorrespondenceAddress string `gorm:"not null" json:"correspondence_address"` // 通讯地址Correspondence address
+	Phone                 string `gorm:"not null" json:"phone"`                  // 手机号码
+	Email                 string `gorm:"not null" json:"email"`                  // 电子邮箱
+	Landline              string `gorm:"not null" json:"landline"`               // 固定电话
+	PostCode              string `gorm:"not null" json:"post_code"`              // 邮政编码
+	HomeAddress           string `gorm:"not null" json:"home_address"`           // 家庭地址
 }
 
 const (
