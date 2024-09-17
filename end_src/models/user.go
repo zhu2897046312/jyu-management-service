@@ -36,7 +36,7 @@ type StudentStatusInformation struct {
 	ClassName          string `gorm:"not null" json:"class_name"`          // 班级名称
 	ProfessionalName   string `gorm:"not null" json:"professional_name"`   // 专业名称
 	Status             string `gorm:"not null" json:"status"`              // 学籍状态
-	IsInSchool         bool   `gorm:"not null" json:"is_in_School"`        // 是否在校
+	IsInSchool         int    `gorm:"not null" json:"is_in_School"`        // 是否在校
 	RegistrationStatus string `gorm:"not null" json:"registration_status"` // 报到注册状态
 	EducationalLevel   string `gorm:"not null" json:"educational_level"`   // 学历层次
 	CultivationMethod  string `gorm:"not null" json:"cultivation_method"`  // 培养方式
