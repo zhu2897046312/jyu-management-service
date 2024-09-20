@@ -28,6 +28,12 @@ func Router() *gin.Engine {
 	// r.POST("/admin/UpdateCourses/:courseCode", service.UpdateCourses)
 	// r.DELETE("/admin/DeleteCourses/:course_code",service.DeleteCourses)
 
+	// admin UserAccount
+	r.GET("/admin/GetUserAccount", service.GetUserAccount)
+    r.PUT("/admin/UpdateUserAccount/:account", service.UpdateUserAccount)
+    r.POST("/admin/AddUserAccount", service.AddUserAccount)
+    r.DELETE("/admin/DeleteUserAccount/:account", service.DeleteUserAccount)
+
 	// admin Courses
 	r.GET("/admin/GetCourses", service.GetCourses)
     r.PUT("/admin/UpdateCourses/:course_code", service.UpdateCourses)

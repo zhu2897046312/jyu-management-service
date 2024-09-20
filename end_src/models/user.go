@@ -3,7 +3,9 @@ package models
 import (
 	"jyu-service/utils"
 	"log"
-
+	"strconv"
+	"time"
+	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -60,8 +62,8 @@ type ContactInformation struct {
 
 const (
 	Administrator int = 0
-	Teacher       int = 1
-	Student       int = 2
+	Teacher       int = 2
+	Student       int = 1
 )
 
 func init() {
@@ -111,6 +113,61 @@ func (table ContactInformation) TableNanme() string {
 }
 
 // 账号
+// GenerateAccount 生成账号逻辑
+func GenerateAccount(chatType int) string {
+	// 1. 获取当前年份后两位
+	currentYear := time.Now().Year()
+	yearSuffix := strconv.Itoa(currentYear)[2:] // 取后两位
+
+	// 2. 根据 chatType 确定账号类型标志
+	var accountType string
+	switch chatType {
+	case Administrator:
+		accountType = "0"
+	case Student:
+		accountType = "1"
+	case Teacher:
+		accountType = "2"
+	default:
+		accountType = "1" // 默认学生
+	}
+
+	// 3. 查找当前最大账号并自增
+	var lastAccount UserAccount
+	err := utils.DB_MySQL.Model(&UserAccount{}).
+		Where("account LIKE ?", fmt.Sprintf("%s%s%%", yearSuffix, accountType)).
+		Order("account DESC").First(&lastAccount).Error
+
+	var nextID int
+	if err != nil && err != gorm.ErrRecordNotFound {
+		fmt.Println("Error fetching last account:", err)
+		return ""
+	}
+
+	if err == gorm.ErrRecordNotFound {
+		// 如果没有找到，表示是今年第一个该类型账号，初始值为00001
+		nextID = 1
+	} else {
+		// 取出账号最后五位并加1
+		lastIDStr := lastAccount.Account[len(lastAccount.Account)-5:]
+		lastID, _ := strconv.Atoi(lastIDStr)
+		nextID = lastID + 1
+	}
+
+	// 4. 将 nextID 格式化为五位数，并拼接成完整账号
+	accountSuffix := fmt.Sprintf("%05d", nextID) // 保证自增部分是5位数
+	newAccount := yearSuffix + accountType + accountSuffix
+
+	return newAccount
+}
+
+func (u *UserAccount) Insert_auto() (string ,*gorm.DB) {
+	//2. 生成账号
+	u.Account = GenerateAccount(u.ChatType)
+	// 插入数据库
+	return u.Account ,utils.DB_MySQL.Model(&UserAccount{}).Create(&u)
+}
+
 func (u *UserAccount) Insert(employee *UserAccount) *gorm.DB {
 	return utils.DB_MySQL.Model(&UserAccount{}).Create(employee)
 }

@@ -27,9 +27,10 @@
                     <el-icon><location /></el-icon>
                     <span>账户管理</span>
                 </template>
-                <el-menu-item index="2-1"> 基本信息管理</el-menu-item>
-                <el-menu-item index="2-2">学籍信息管理</el-menu-item>
-                <el-menu-item index="2-3">联系方式管理</el-menu-item>
+                <el-menu-item index="2-1">账号密码管理</el-menu-item>
+                <el-menu-item index="2-2"> 基本信息管理</el-menu-item>
+                <el-menu-item index="2-3">学籍信息管理</el-menu-item>
+                <el-menu-item index="2-4">联系方式管理</el-menu-item>
               </el-sub-menu>
             </el-menu>
           </el-aside>
@@ -56,12 +57,14 @@
         // 根据菜单项跳转到不同页面
         if (index === '1') {
           this.$router.push({ name: 'CourseManagement' });
-        } else if (index === '2-1') {
-          this.$router.push({ name: 'BasicInfoManagement' });
         } else if (index === '2-2') {
-          this.$router.push({ name: 'StudentStatusManagement' });
+          this.$router.push({ name: 'BasicInfoManagement' });
         } else if (index === '2-3') {
+          this.$router.push({ name: 'StudentStatusManagement' });
+        } else if (index === '2-4') {
           this.$router.push({ name: 'ContactManagement' });
+        } else if (index === '2-1') {
+          this.$router.push({ name: 'AccountManagement' });
         }
       },
       logout() {

@@ -6,6 +6,7 @@ import CourseManagement from '@/components/Admin/CourseManagement.vue';
 import BasicInfoManagement from '@/components/Admin/BasicInfoManagement.vue';
 import StudentStatusManagement from '@/components/Admin/StudentStatusManagement.vue';
 import ContactManagement from '@/components/Admin/ContactManagement.vue';
+import AccountManagement from '@/components/Admin/AccountManagement.vue';
 
 import Teacher from '@/views/TeacherIndex.vue';
 import Login from '@/views/Login.vue'; 
@@ -55,6 +56,11 @@ const routes = [
         path: 'contact-management',
         name: 'ContactManagement',
         component: ContactManagement,
+      },
+      {
+        path: 'account-management',
+        name: 'AccountManagement',
+        component: AccountManagement,
       },
     ]
   },
