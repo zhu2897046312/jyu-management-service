@@ -1,12 +1,12 @@
 package service
 
 import (
+	"fmt"
 	"jyu-service/models"
 	"jyu-service/utils"
+	"log"
 	"net/http"
 	"strconv"
-	"fmt"
-	"log"
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
 )
@@ -61,7 +61,7 @@ func GenerateExcel(c *gin.Context) {
 				f.SetCellValue(sheetName, "D"+strconv.Itoa(row), c.CourseCode)
 				f.SetCellValue(sheetName, "E"+strconv.Itoa(row), c.CourseName)
 				f.SetCellValue(sheetName, "F"+strconv.Itoa(row), uc.CourseGrade)
-				f.SetCellValue(sheetName, "G"+strconv.Itoa(row), CalculateGradePoints(uc.CourseGrade,c.Credits))
+				f.SetCellValue(sheetName, "G"+strconv.Itoa(row), CalculateGradePoints(uc.CourseGrade, c.Credits))
 				row++
 			}
 		}
@@ -75,57 +75,45 @@ func GenerateExcel(c *gin.Context) {
 	}
 }
 
-
 // 生成固定格式的 Excel 文件
 func GenerateExcelTemplate(c *gin.Context) {
 	f := excelize.NewFile()
 
 	// 创建“Students” Sheet 并写入表头
-	index, err := f.NewSheet("Students")
-	if err!= nil {
-        log.Fatal(err)
-    }
-	f.SetCellValue("Students", "A1", "Account")            // 学号
-	f.SetCellValue("Students", "B1", "AcademicYear")       // 年级
-	f.SetCellValue("Students", "C1", "AcademyName")        // 学院名称
-	f.SetCellValue("Students", "D1", "ClassName")          // 班级名称
-	f.SetCellValue("Students", "E1", "ProfessionalName")   // 专业名称
-	f.SetCellValue("Students", "F1", "Status")             // 学籍状态
-	f.SetCellValue("Students", "G1", "IsInSchool")         // 是否在校
-	f.SetCellValue("Students", "H1", "RegistrationStatus") // 报到注册状态
-	f.SetCellValue("Students", "I1", "EducationalLevel")   // 学历层次
-	f.SetCellValue("Students", "J1", "CultivationMethod")  // 培养方式
-	f.SetCellValue("Students", "K1", "CultivationLevel")   // 培养层次
-	f.SetCellValue("Students", "L1", "StudentType")        // 学生类别
-	f.SetCellValue("Students", "M1", "CheckInTime")        // 报到时间
-	f.SetCellValue("Students", "N1", "RegistrationTime")   // 注册时间
-	f.SetCellValue("Students", "O1", "Academic")           // 学制
+	index, err := f.NewSheet("Template")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// 创建“Teachers” Sheet 并写入表头
-	f.NewSheet("Teachers")
-	f.SetCellValue("Teachers", "A1", "Account")            // 学号
-	f.SetCellValue("Teachers", "B1", "Password")           // 密码
-	f.SetCellValue("Teachers", "C1", "ChatType")           // 账户类型
-	f.SetCellValue("Teachers", "D1", "CorrespondenceAddress") // 通讯地址
-	f.SetCellValue("Teachers", "E1", "Phone")              // 手机号码
-	f.SetCellValue("Teachers", "F1", "Email")              // 电子邮箱
-	f.SetCellValue("Teachers", "G1", "Landline")           // 固定电话
-	f.SetCellValue("Teachers", "H1", "PostCode")           // 邮政编码
-	f.SetCellValue("Teachers", "I1", "HomeAddress")        // 家庭地址
+	// 公共表头：账号信息、基本信息、联系方式
+	commonHeaders := []string{
+		"账号", "密码", "账号类型", // 账号信息
+		"姓名", "性别", "身份证件类型", "身份证件号", // 基本信息
+		"民族", "出生日期", "曾用名", // 基本信息
+		"政治面貌", "入学日期", // 基本信息
+		"通讯地址", "手机号码", "邮箱", // 联系方式
+		"固定电话", "邮政编码", "家庭住址", // 联系方式
+	}
 
-	// 创建“Admins” Sheet 并写入表头
-	f.NewSheet("Admins")
-	f.SetCellValue("Admins", "A1", "Account")            // 学号
-	f.SetCellValue("Admins", "B1", "Password")           // 密码
-	f.SetCellValue("Admins", "C1", "ChatType")           // 账户类型
-	f.SetCellValue("Admins", "D1", "CorrespondenceAddress") // 通讯地址
-	f.SetCellValue("Admins", "E1", "Phone")              // 手机号码
-	f.SetCellValue("Admins", "F1", "Email")              // 电子邮箱
-	f.SetCellValue("Admins", "G1", "Landline")           // 固定电话
-	f.SetCellValue("Admins", "H1", "PostCode")           // 邮政编码
-	f.SetCellValue("Admins", "I1", "HomeAddress")        // 家庭地址
+	// 学生特有字段
+	studentSpecificHeaders := []string{
+		"年级", "学院名称", "班级名称", // 学籍信息
+		"专业名称", "学籍状态", "是否在校", // 学籍信息
+		"报到注册状态", "学历层次", // 学籍信息
+		"培养方式", "培养层次", // 学籍信息
+		"学生类别", "报到时间", "注册时间", // 学籍信息
+		"学制", // 学籍信息
+	}
 
-	// 设置默认Sheet为“Students”
+	// 组合学生表头
+	studentHeaders := append(commonHeaders, studentSpecificHeaders...)
+
+	// 写入学生表头
+	for i, header := range studentHeaders {
+		column := string('A' + i)
+		f.SetCellValue("Template", column+"1", header)
+	}
+
 	f.SetActiveSheet(index)
 
 	// 设置响应头，返回文件流给前端
@@ -139,6 +127,176 @@ func GenerateExcelTemplate(c *gin.Context) {
 		return
 	}
 }
+
+// 解析上传的 Excel 文件并生成账号
+// 解析上传的 Excel 文件并生成账号
+func ImportAndGenerateAccounts(c *gin.Context) {
+	// 1. 获取上传的文件
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无法获取文件"})
+		return
+	}
+
+	// 2. 打开上传的文件
+	f, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法打开文件"})
+		return
+	}
+	defer f.Close()
+
+	// 4. 使用 excelize.OpenReader 读取文件内容
+	excelFile, err := excelize.OpenReader(f)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法解析 Excel 文件"})
+		return
+	}
+
+	// 确保获取并使用正确的工作表名 "Template"
+	sheetName := "Template"
+	index, err := excelFile.GetSheetIndex(sheetName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法获取工作表索引"})
+		return
+	}
+	if index == -1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "工作表 Template 不存在"})
+		return
+	}
+
+	// 4. 获取 Students Sheet 的内容
+	rows, err := excelFile.GetRows(sheetName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法读取工作表"})
+		return
+	}
+
+	// 5. 遍历 Excel 文件中的每一行，从第二行开始
+	for i, row := range rows {
+		if i == 0 {
+			// 跳过表头
+			continue
+		}
+		chatType, _ := strconv.Atoi(row[2])
+		
+		// 将数据插入数据库
+		userAccount := models.UserAccount{
+			Password: row[1],
+			ChatType: chatType,
+		}
+
+		// 插入到 UserAccount 表中
+		account, db := userAccount.Insert_auto()
+		if db.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": db.Error.Error()})
+			return
+		}
+
+		// 在 Excel 中写入生成的账号到指定的单元格，比如 A 列
+		cell := fmt.Sprintf("A%d", i+1)
+		fmt.Printf("Writing account %s to cell %s\n", account, cell)
+		err := excelFile.SetCellValue(sheetName, cell, account)
+		if err != nil {
+			fmt.Printf(err.Error())
+			return
+		}
+
+		// 处理其他信息并插入相应的表
+		name := row[3]
+		sex, _ := strconv.Atoi(row[4])
+		identificationType := row[5]
+		identificationNumber := row[6]
+		ethnicGroup := row[7]
+		birthday := row[8]
+		oldName := row[9]
+		politicalOutlook := row[10]
+		enrollmentDates := row[11]
+
+		// 插入 UserBasicInformation
+		basicInfo := models.UserBasicInformation{
+			Account:              account,
+			Name:                 name,
+			Sex:                  sex,
+			IdentificationType:   identificationType,
+			IdentificationNumber: identificationNumber,
+			EthnicGroup:          ethnicGroup,
+			Birthday:             birthday,
+			OldName:              oldName,
+			PoliticalOutlook:     politicalOutlook,
+			EnrollmentDates:      enrollmentDates,
+		}
+		utils.DB_MySQL.Create(&basicInfo)
+
+		// 插入联系方式
+		correspondenceAddress := row[12]
+		phone := row[13]
+		email := row[14]
+		landline := row[15]
+		postCode := row[16]
+		homeAddress := row[17]
+
+		contactInfo := models.ContactInformation{
+			Account:               account,
+			CorrespondenceAddress: correspondenceAddress,
+			Phone:                 phone,
+			Email:                 email,
+			Landline:              landline,
+			PostCode:              postCode,
+			HomeAddress:           homeAddress,
+		}
+		utils.DB_MySQL.Create(&contactInfo)
+
+		if chatType == models.Student {
+			academicYear := row[12]
+			academyName := row[13]
+			className := row[14]
+			professionalName := row[15]
+			status := row[16]
+			isInSchool, _ := strconv.Atoi(row[17])
+			registrationStatus := row[18]
+			educationalLevel := row[19]
+			cultivationMethod := row[20]
+			cultivationLevel, _ := strconv.Atoi(row[21])
+			studentType, _ := strconv.Atoi(row[22])
+			checkInTime := row[23]
+			registrationTime := row[24]
+			academic, _ := strconv.Atoi(row[25])
+
+			studentStatus := models.StudentStatusInformation{
+				Account:            account,
+				AcademicYear:       academicYear,
+				AcademyName:        academyName,
+				ClassName:          className,
+				ProfessionalName:   professionalName,
+				Status:             status,
+				IsInSchool:         isInSchool,
+				RegistrationStatus: registrationStatus,
+				EducationalLevel:   educationalLevel,
+				CultivationMethod:  cultivationMethod,
+				CultivationLevel:   cultivationLevel,
+				StudentType:        studentType,
+				CheckInTime:        checkInTime,
+				RegistrationTime:   registrationTime,
+				Academic:           academic,
+			}
+			utils.DB_MySQL.Create(&studentStatus)
+		}
+	}
+
+	// 设置响应头，返回文件流给前端
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Disposition", "attachment; filename=\"update_template.xlsx\"")
+	c.Header("File-Name", "update_template.xlsx")
+	if err := excelFile.Write(c.Writer); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "无法生成 Excel 文件",
+		})
+		return
+	}
+}
+
+
 
 
 // 添加、更新账号信息

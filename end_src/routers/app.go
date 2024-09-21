@@ -60,7 +60,12 @@ func Router() *gin.Engine {
 	r.GET("/admin/GetContactInformation", service.GetContactInformationHandler)
 	r.GET("/admin/GetStudentStatusInformation", service.GetStudentStatusInformationHandler)
 	r.GET("/admin/GetGradeInformationHandler", service.GetGradeInformationHandler)
+
+	// execl
 	r.GET("/generate_excel", service.GenerateExcel)
+	r.GET("/generate_excel_template", service.GenerateExcelTemplate)
+	r.POST("/admin/uploadExcel", service.ImportAndGenerateAccounts)
+	
 
 	r.POST("/admin/courses", service.DynamicQueryHandler)
 
