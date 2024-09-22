@@ -2,6 +2,7 @@
   <div>
       <!-- 添加下载和上传按钮 -->
     <el-button type="primary" @click="downloadTemplate">下载Excel模板</el-button>
+    <el-button type="primary" @click="download">下载</el-button>
     <el-upload
       class="upload-demo"
       drag
@@ -176,15 +177,28 @@ methods: {
       });
     },
     handleUploadSuccess(response) {
+      // 确保正确处理二进制数据
       const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob); // 使用 Blob URL
-      link.download = 'modified.xlsx'; // 下载的文件名
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      this.$message.success('文件上传并处理成功！');
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'update_template.xlsx'; // 下载的文件名
+        link.click();
     },
+    download() {
+      axios({
+        url: 'http://localhost:8081/all_execl', // 后端生成模板的接口
+        method: 'GET',
+        responseType: 'blob' // 确保返回的是文件流
+      }).then((response) => {
+        const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'all.xlsx'; // 下载的文件名
+        link.click();
+      }).catch((error) => {
+        console.error('下载模板失败', error);
+      });
+    }
 },
 mounted() {
     this.fetchUserAccounts();

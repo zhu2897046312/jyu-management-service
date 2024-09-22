@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	// "os"
+	// "io"
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
 )
@@ -75,6 +77,17 @@ func GenerateExcel(c *gin.Context) {
 	}
 }
 
+// 生成 Excel 列名 (A, B, ..., Z, AA, AB, ..., ZZ, AAA, etc.)
+func getExcelColumnName(n int) string {
+    colName := ""
+    for n > 0 {
+        n-- // 将 n 转换为从 0 开始
+        colName = string(rune('A'+(n%26))) + colName
+        n /= 26
+    }
+    return colName
+}
+
 // 生成固定格式的 Excel 文件
 func GenerateExcelTemplate(c *gin.Context) {
 	f := excelize.NewFile()
@@ -110,10 +123,9 @@ func GenerateExcelTemplate(c *gin.Context) {
 
 	// 写入学生表头
 	for i, header := range studentHeaders {
-		column := string('A' + i)
+		column := getExcelColumnName(i + 1) // i 从 0 开始，所以要加 1
 		f.SetCellValue("Template", column+"1", header)
 	}
-
 	f.SetActiveSheet(index)
 
 	// 设置响应头，返回文件流给前端
@@ -128,7 +140,6 @@ func GenerateExcelTemplate(c *gin.Context) {
 	}
 }
 
-// 解析上传的 Excel 文件并生成账号
 // 解析上传的 Excel 文件并生成账号
 func ImportAndGenerateAccounts(c *gin.Context) {
 	// 1. 获取上传的文件
@@ -156,6 +167,7 @@ func ImportAndGenerateAccounts(c *gin.Context) {
 	// 确保获取并使用正确的工作表名 "Template"
 	sheetName := "Template"
 	index, err := excelFile.GetSheetIndex(sheetName)
+	fmt.Println(" index:" + string(index))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法获取工作表索引"})
 		return
@@ -198,7 +210,7 @@ func ImportAndGenerateAccounts(c *gin.Context) {
 		fmt.Printf("Writing account %s to cell %s\n", account, cell)
 		err := excelFile.SetCellValue(sheetName, cell, account)
 		if err != nil {
-			fmt.Printf(err.Error())
+			fmt.Println(err.Error())
 			return
 		}
 
@@ -284,166 +296,104 @@ func ImportAndGenerateAccounts(c *gin.Context) {
 		}
 	}
 
-	// 设置响应头，返回文件流给前端
-	c.Header("Content-Type", "application/octet-stream")
-	c.Header("Content-Disposition", "attachment; filename=\"update_template.xlsx\"")
-	c.Header("File-Name", "update_template.xlsx")
-	if err := excelFile.Write(c.Writer); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "无法生成 Excel 文件",
-		})
+	c.JSON(
+		http.StatusOK, gin.H{
+            "message": "Excel 解析并生成账号成功",
+        },
+	)
+}
+
+// 获取所有信息并生成 Excel 文件
+func GetAllInfoExecl(c *gin.Context) {
+	var accounts []models.UserAccount
+
+	// 1. 查询所有账号
+	if err := utils.DB_MySQL.Find(&accounts).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取账号失败"})
 		return
 	}
+
+	// 2. 创建 Excel 文件
+	f := excelize.NewFile()
+	sheet := "Sheet1"
+	f.NewSheet(sheet)
+
+	// 设置表头
+	headers := []string{
+		"账号", "密码", "账户类型", "姓名", "性别", "身份证号", "出生日期",
+		"民族", "证件类型", "曾用名", "政治面貌", "入学日期", "年级", "学院名称",
+		"班级名称", "专业名称", "学籍状态", "是否在校", "报到注册状态", "学历层次",
+		"培养方式", "培养层次", "学生类别", "报到时间", "注册时间", "学制", "通讯地址",
+		"手机号码", "电子邮箱", "固定电话", "邮政编码", "家庭地址",
+	}
+	for i, header := range headers {
+		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
+		f.SetCellValue(sheet, cell, header)
+	}
+
+	// 3. 查询每个账号的详细信息并填充到 Excel 中
+	for idx, account := range accounts {
+		// 基本信息
+		var basicInfo models.UserBasicInformation
+		utils.DB_MySQL.Where("account = ?", account.Account).First(&basicInfo)
+
+		// 学籍信息
+		var statusInfo models.StudentStatusInformation
+		utils.DB_MySQL.Where("account = ?", account.Account).First(&statusInfo)
+
+		// 联系方式
+		var contactInfo models.ContactInformation
+		utils.DB_MySQL.Where("account = ?", account.Account).First(&contactInfo)
+
+		// 填入数据
+		row := idx + 2
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), account.Account)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), account.Password)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), account.ChatType)
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), basicInfo.Name)
+		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), basicInfo.Sex)
+		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), basicInfo.IdentificationNumber)
+		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), basicInfo.Birthday)
+		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), basicInfo.EthnicGroup)
+		f.SetCellValue(sheet, fmt.Sprintf("I%d", row), basicInfo.IdentificationType)
+		f.SetCellValue(sheet, fmt.Sprintf("J%d", row), basicInfo.OldName)
+		f.SetCellValue(sheet, fmt.Sprintf("K%d", row), basicInfo.PoliticalOutlook)
+		f.SetCellValue(sheet, fmt.Sprintf("L%d", row), basicInfo.EnrollmentDates)
+
+		// 学籍信息
+		f.SetCellValue(sheet, fmt.Sprintf("M%d", row), statusInfo.AcademicYear)
+		f.SetCellValue(sheet, fmt.Sprintf("N%d", row), statusInfo.AcademyName)
+		f.SetCellValue(sheet, fmt.Sprintf("O%d", row), statusInfo.ClassName)
+		f.SetCellValue(sheet, fmt.Sprintf("P%d", row), statusInfo.ProfessionalName)
+		f.SetCellValue(sheet, fmt.Sprintf("Q%d", row), statusInfo.Status)
+		f.SetCellValue(sheet, fmt.Sprintf("R%d", row), statusInfo.IsInSchool)
+		f.SetCellValue(sheet, fmt.Sprintf("S%d", row), statusInfo.RegistrationStatus)
+		f.SetCellValue(sheet, fmt.Sprintf("T%d", row), statusInfo.EducationalLevel)
+		f.SetCellValue(sheet, fmt.Sprintf("U%d", row), statusInfo.CultivationMethod)
+		f.SetCellValue(sheet, fmt.Sprintf("V%d", row), statusInfo.CultivationLevel)
+		f.SetCellValue(sheet, fmt.Sprintf("W%d", row), statusInfo.StudentType)
+		f.SetCellValue(sheet, fmt.Sprintf("X%d", row), statusInfo.CheckInTime)
+		f.SetCellValue(sheet, fmt.Sprintf("Y%d", row), statusInfo.RegistrationTime)
+		f.SetCellValue(sheet, fmt.Sprintf("Z%d", row), statusInfo.Academic)
+
+		// 联系方式
+		f.SetCellValue(sheet, fmt.Sprintf("AA%d", row), contactInfo.CorrespondenceAddress)
+		f.SetCellValue(sheet, fmt.Sprintf("AB%d", row), contactInfo.Phone)
+		f.SetCellValue(sheet, fmt.Sprintf("AC%d", row), contactInfo.Email)
+		f.SetCellValue(sheet, fmt.Sprintf("AD%d", row), contactInfo.Landline)
+		f.SetCellValue(sheet, fmt.Sprintf("AE%d", row), contactInfo.PostCode)
+		f.SetCellValue(sheet, fmt.Sprintf("AF%d", row), contactInfo.HomeAddress)
+	}
+
+	// 4. 生成文件并返回给前端
+	// 设置 Excel 输出流
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Content-Disposition", "attachment; filename=all.xlsx")
+	if err := f.Write(c.Writer); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
 }
 
 
 
 
-// 添加、更新账号信息
-// 批量导入Excel
-func ImportFromExcel(filePath string) error {
-	// 打开Excel文件
-	f, err := excelize.OpenFile(filePath)
-	if err != nil {
-		return fmt.Errorf("打开文件失败: %w", err)
-	}
-	defer f.Close()
-
-	// 导入学生
-	if err := importStudents(f); err != nil {
-		log.Printf("学生导入失败: %v\n", err)
-	}
-
-	// 导入教师
-	if err := importTeachers(f); err != nil {
-		log.Printf("教师导入失败: %v\n", err)
-	}
-
-	// 导入管理员
-	if err := importAdmins(f); err != nil {
-		log.Printf("管理员导入失败: %v\n", err)
-	}
-
-	return nil
-}
-
-func importStudents(f *excelize.File) error {
-	rows, err := f.GetRows("Students")
-	if err != nil {
-		return err
-	}
-
-	for _, row := range rows[1:] {
-		student := models.StudentStatusInformation{
-			Account:            row[0],
-			AcademicYear:       row[1],
-			AcademyName:        row[2],
-			ClassName:          row[3],
-			ProfessionalName:   row[4],
-			Status:             row[5],
-			IsInSchool:         parseBool(row[6]),
-			RegistrationStatus: row[7],
-			EducationalLevel:   row[8],
-			CultivationMethod:  row[9],
-			CultivationLevel:   parseInt(row[10]),
-			StudentType:        parseInt(row[11]),
-			CheckInTime:        row[12],
-			RegistrationTime:   row[13],
-			Academic:           parseInt(row[14]),
-		}
-
-		// 添加或更新学生信息
-		if err := utils.DB_MySQL.Save(&student).Error; err != nil {
-			return fmt.Errorf("保存学生信息失败: %w", err)
-		}
-	}
-	return nil
-}
-
-func importTeachers(f *excelize.File) error {
-	rows, err := f.GetRows("Teachers")
-	if err != nil {
-		return err
-	}
-
-	for _, row := range rows[1:] {
-		teacher := models.UserAccount{
-			Account:  row[0],
-			Password: row[1],
-			ChatType: parseInt(row[2]),
-		}
-
-		// 添加或更新教师账号
-		if err := utils.DB_MySQL.Save(&teacher).Error; err != nil {
-			return fmt.Errorf("保存教师账号信息失败: %w", err)
-		}
-
-		contact := models.ContactInformation{
-			Account:               row[0],
-			CorrespondenceAddress: row[3],
-			Phone:                 row[4],
-			Email:                 row[5],
-			Landline:              row[6],
-			PostCode:              row[7],
-			HomeAddress:           row[8],
-		}
-
-		// 添加或更新教师联系方式
-		if err := utils.DB_MySQL.Save(&contact).Error; err != nil {
-			return fmt.Errorf("保存教师联系方式失败: %w", err)
-		}
-	}
-	return nil
-}
-
-func importAdmins(f *excelize.File) error {
-	rows, err := f.GetRows("Admins")
-	if err != nil {
-		return err
-	}
-
-	for _, row := range rows[1:] {
-		admin := models.UserAccount{
-			Account:  row[0],
-			Password: row[1],
-			ChatType: parseInt(row[2]),
-		}
-
-		// 添加或更新管理员账号
-		if err := utils.DB_MySQL.Save(&admin).Error; err != nil {
-			return fmt.Errorf("保存管理员账号信息失败: %w", err)
-		}
-
-		contact := models.ContactInformation{
-			Account:               row[0],
-			CorrespondenceAddress: row[3],
-			Phone:                 row[4],
-			Email:                 row[5],
-			Landline:              row[6],
-			PostCode:              row[7],
-			HomeAddress:           row[8],
-		}
-
-		// 添加或更新管理员联系方式
-		if err := utils.DB_MySQL.Save(&contact).Error; err != nil {
-			return fmt.Errorf("保存管理员联系方式失败: %w", err)
-		}
-	}
-	return nil
-}
-
-// 工具函数
-func parseBool(s string) int {
-	if s == "true" {
-		return 1
-	}
-	return 0
-}
-
-func parseInt(s string) int {
-	value, err := strconv.Atoi(s)
-	if err != nil {
-		return 0
-	}
-	return value
-}
