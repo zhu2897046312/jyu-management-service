@@ -8,7 +8,14 @@ import (
 	"strconv"
 )
 
-// GetUserBasic 获取学籍信息列表（支持分页）
+// ContactsResponse 定义
+// StudentStatusInfoResponse 定义
+type StudentStatusInfoResponse struct {
+	models.StudentStatusInformation
+	UserName string `json:"user_name"` // 姓名 (从 UserBasicInformation 表中获取)
+}
+
+// GetStudentStatusInfo 获取学籍信息列表（支持分页）
 func GetStudentStatusInfo(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
 	pageSizeStr := c.DefaultQuery("pageSize", "10")
@@ -25,33 +32,42 @@ func GetStudentStatusInfo(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
-	var UserBasic []models.StudentStatusInformation
+	var studentStatusInfos []StudentStatusInfoResponse
 	var total int64
 
+	// 获取总数
 	if err := utils.DB_MySQL.Model(&models.StudentStatusInformation{}).Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status": "error", 
-			"message": "无法获取学籍信息总数", 
-			"error": err.Error(),
+			"status":  "error",
+			"message": "无法获取学籍信息总数",
+			"error":   err.Error(),
 		})
 		return
 	}
 
-	if err := utils.DB_MySQL.Limit(pageSize).Offset(offset).Find(&UserBasic).Error; err != nil {
+	// 联表查询 StudentStatusInformation 和 UserBasicInformation，获取 UserName
+	if err := utils.DB_MySQL.Table("student_status_informations").
+		Select("student_status_informations.*, user_basic_informations.name as user_name").
+		Joins("left join user_basic_informations on student_status_informations.account = user_basic_informations.account").
+		Limit(pageSize).
+		Offset(offset).
+		Scan(&studentStatusInfos).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status": "error", 
-			"message": "无法获取学籍信息数据", 
-			"error": err.Error(),
+			"status":  "error",
+			"message": "无法获取学籍信息数据",
+			"error":   err.Error(),
 		})
 		return
 	}
 
+	// 返回结果
 	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"StudentStatusInfo": UserBasic,
-		"total":   total,
+		"status":              "success",
+		"StudentStatusInfo":    studentStatusInfos,
+		"total":               total,
 	})
 }
+
 
 // AddCourse 添加学籍信息信息
 func AddStudentStatusInfo(c *gin.Context) {

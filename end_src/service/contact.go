@@ -8,6 +8,12 @@ import (
 	"strconv"
 )
 
+// ContactsResponse 定义
+type ContactsResponse struct {
+	models.ContactInformation
+	UserName string `json:"user_name"` // 姓名 (从 UserBasicInformation 表中获取)
+}
+
 // GetContacts 获取联系方式列表（支持分页）
 func GetContacts(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
@@ -25,31 +31,39 @@ func GetContacts(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
-	var Contacts []models.ContactInformation
+	var contacts []ContactsResponse
 	var total int64
 
+	// 获取总数
 	if err := utils.DB_MySQL.Model(&models.ContactInformation{}).Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status": "error", 
-			"message": "无法获取联系方式总数", 
-			"error": err.Error(),
+			"status":  "error",
+			"message": "无法获取联系方式总数",
+			"error":   err.Error(),
 		})
 		return
 	}
 
-	if err := utils.DB_MySQL.Limit(pageSize).Offset(offset).Find(&Contacts).Error; err != nil {
+	// 联表查询 ContactInformation 和 UserBasicInformation，获取 UserName
+	if err := utils.DB_MySQL.Table("contact_informations").
+		Select("contact_informations.*, user_basic_informations.name as user_name").
+		Joins("left join user_basic_informations on contact_informations.account = user_basic_informations.account").
+		Limit(pageSize).
+		Offset(offset).
+		Scan(&contacts).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status": "error", 
-			"message": "无法获取联系方式数据", 
-			"error": err.Error(),
+			"status":  "error",
+			"message": "无法获取联系方式数据",
+			"error":   err.Error(),
 		})
 		return
 	}
 
+	// 返回结果
 	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"Contacts": Contacts,
-		"total":   total,
+		"status":   "success",
+		"Contacts": contacts,
+		"total":    total,
 	})
 }
 

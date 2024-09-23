@@ -2,7 +2,7 @@
   <div>
       <!-- 添加下载和上传按钮 -->
     <el-button type="primary" @click="downloadTemplate">下载Excel模板</el-button>
-    <el-button type="primary" @click="download">下载</el-button>
+    <el-button type="primary" @click="download">下载已有的所有账户信息</el-button>
     <el-upload
       class="upload-demo"
       drag
@@ -12,7 +12,8 @@
     >
       <i class="el-icon-upload"></i>
       <div class="el-upload__text">拖拽文件或点击上传</div>
-      <div class="el-upload__tip" slot="tip">上传填写好的Excel文件</div>
+      <div class="el-upload__text">新用户由系统生成账号不用填account列/批量更新用户信息先下载execl文件再填写好要更新的内容</div>
+      <div class="el-upload__tip" slot="tip">上传Excel文件</div>
     </el-upload>
 
     <el-button type="primary" @click="showAddDialog">添加账号</el-button>
@@ -178,11 +179,7 @@ methods: {
     },
     handleUploadSuccess(response) {
       // 确保正确处理二进制数据
-      const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'update_template.xlsx'; // 下载的文件名
-        link.click();
+      console.log(response.message);
     },
     download() {
       axios({

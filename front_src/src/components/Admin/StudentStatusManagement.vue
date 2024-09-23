@@ -3,6 +3,7 @@
       <el-button type="primary" @click="showAddDialog">添加学籍信息</el-button>
       <el-table :data="studentStatuses" stripe>
         <el-table-column prop="account" label="学号" width="150"></el-table-column>
+        <el-table-column prop="user_name" label="姓名" width="150"></el-table-column>
         <el-table-column prop="academic_year" label="年级" width="150"></el-table-column>
         <el-table-column prop="academy_name" label="学院名称" width="150"></el-table-column>
         <el-table-column prop="class_name" label="班级名称" width="150"></el-table-column>
@@ -103,6 +104,7 @@ data() {
         check_in_time:'',
         registration_time:'',
         academic:'',
+        user_name:'',
     },
     isEditing: false,
     currentPage: 1,

@@ -62,8 +62,8 @@ type ContactInformation struct {
 
 const (
 	Administrator int = 0
-	Teacher       int = 2
 	Student       int = 1
+	Teacher       int = 2
 )
 
 func init() {

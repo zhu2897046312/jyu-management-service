@@ -3,6 +3,7 @@
       <el-button type="primary" @click="showAddContactDialog">添加联系方式</el-button>
       <el-table :data="contacts" stripe>
         <el-table-column prop="account" label="学号" width="150"></el-table-column>
+        <el-table-column prop="user_name" label="姓名" width="150"></el-table-column>
         <el-table-column prop="phone" label="手机号码" width="150"></el-table-column>
         <el-table-column prop="email" label="电子邮箱" width="200"></el-table-column>
         <el-table-column prop="correspondence_address" label="通讯地址" width="200"></el-table-column>
@@ -21,6 +22,9 @@
         <el-form :model="form" ref="form" label-width="120px">
           <el-form-item label="学号" :rules="[{ required: true, message: '学号不能为空', trigger: 'blur' }]">
             <el-input v-model="form.account" :disabled="isEditing"></el-input>
+          </el-form-item>
+          <el-form-item label="姓名" :rules="[{ required: true, message: '学号不能为空', trigger: 'blur' }]">
+            <el-input v-model="form.user_name" :disabled="isEditing"></el-input>
           </el-form-item>
           <el-form-item label="通讯地址">
             <el-input v-model="form.correspondence_address"></el-input>
@@ -65,6 +69,7 @@ data() {
         landline: '',
         post_code: '',
         home_address: '',
+        user_name: '',
     },
     isEditing: false,
     };
@@ -88,6 +93,7 @@ methods: {
         landline: '',
         post_code: '',
         home_address: '',
+        user_name: '',
     };
     this.dialogVisible = true;
     },

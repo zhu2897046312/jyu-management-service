@@ -93,7 +93,7 @@ func GenerateExcelTemplate(c *gin.Context) {
 	f := excelize.NewFile()
 
 	// 创建“Students” Sheet 并写入表头
-	index, err := f.NewSheet("Template")
+	index, err := f.NewSheet("Sheet1")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -124,7 +124,7 @@ func GenerateExcelTemplate(c *gin.Context) {
 	// 写入学生表头
 	for i, header := range studentHeaders {
 		column := getExcelColumnName(i + 1) // i 从 0 开始，所以要加 1
-		f.SetCellValue("Template", column+"1", header)
+		f.SetCellValue("Sheet1", column+"1", header)
 	}
 	f.SetActiveSheet(index)
 
@@ -140,7 +140,7 @@ func GenerateExcelTemplate(c *gin.Context) {
 	}
 }
 
-// 解析上传的 Excel 文件并生成账号
+// 解析上传的 Excel 文件并根据 account 存在与否更新或插入信息
 func ImportAndGenerateAccounts(c *gin.Context) {
 	// 1. 获取上传的文件
 	file, err := c.FormFile("file")
@@ -157,64 +157,56 @@ func ImportAndGenerateAccounts(c *gin.Context) {
 	}
 	defer f.Close()
 
-	// 4. 使用 excelize.OpenReader 读取文件内容
+	// 3. 使用 excelize.OpenReader 读取文件内容
 	excelFile, err := excelize.OpenReader(f)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法解析 Excel 文件"})
 		return
 	}
 
-	// 确保获取并使用正确的工作表名 "Template"
-	sheetName := "Template"
-	index, err := excelFile.GetSheetIndex(sheetName)
-	fmt.Println(" index:" + string(index))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法获取工作表索引"})
-		return
-	}
-	if index == -1 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "工作表 Template 不存在"})
-		return
-	}
-
-	// 4. 获取 Students Sheet 的内容
+	// 确保获取并使用正确的工作表名 "Sheet1"
+	sheetName := "Sheet1"
 	rows, err := excelFile.GetRows(sheetName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法读取工作表"})
 		return
 	}
 
-	// 5. 遍历 Excel 文件中的每一行，从第二行开始
+	// 4. 遍历 Excel 文件中的每一行，从第二行开始
 	for i, row := range rows {
 		if i == 0 {
 			// 跳过表头
 			continue
 		}
+
+		// 获取账号
+		account := row[0]
 		chatType, _ := strconv.Atoi(row[2])
-		
-		// 将数据插入数据库
-		userAccount := models.UserAccount{
-			Password: row[1],
-			ChatType: chatType,
+
+		// 5. 根据 account 检查用户是否已存在
+		var userAccount models.UserAccount
+		result := utils.DB_MySQL.Where("account = ?", account).First(&userAccount)
+
+		if result.RowsAffected > 0 {
+			// 账号已存在，执行更新操作
+			userAccount.Password = row[1]
+			userAccount.ChatType = chatType
+			utils.DB_MySQL.Save(&userAccount)
+		} else {
+			// 账号不存在，执行插入操作
+			userAccount = models.UserAccount{
+				Password: row[1],
+				ChatType: chatType,
+			}
+			account_db , db := userAccount.Insert_auto()
+			if db.Error!= nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": db.Error.Error()})
+                return
+			}
+			account = account_db
 		}
 
-		// 插入到 UserAccount 表中
-		account, db := userAccount.Insert_auto()
-		if db.Error != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": db.Error.Error()})
-			return
-		}
-
-		// 在 Excel 中写入生成的账号到指定的单元格，比如 A 列
-		cell := fmt.Sprintf("A%d", i+1)
-		fmt.Printf("Writing account %s to cell %s\n", account, cell)
-		err := excelFile.SetCellValue(sheetName, cell, account)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		// 处理其他信息并插入相应的表
+		// 插入或更新基本信息
 		name := row[3]
 		sex, _ := strconv.Atoi(row[4])
 		identificationType := row[5]
@@ -225,22 +217,39 @@ func ImportAndGenerateAccounts(c *gin.Context) {
 		politicalOutlook := row[10]
 		enrollmentDates := row[11]
 
-		// 插入 UserBasicInformation
-		basicInfo := models.UserBasicInformation{
-			Account:              account,
-			Name:                 name,
-			Sex:                  sex,
-			IdentificationType:   identificationType,
-			IdentificationNumber: identificationNumber,
-			EthnicGroup:          ethnicGroup,
-			Birthday:             birthday,
-			OldName:              oldName,
-			PoliticalOutlook:     politicalOutlook,
-			EnrollmentDates:      enrollmentDates,
-		}
-		utils.DB_MySQL.Create(&basicInfo)
+		var basicInfo models.UserBasicInformation
+		result = utils.DB_MySQL.Where("account = ?", account).First(&basicInfo)
 
-		// 插入联系方式
+		if result.RowsAffected > 0 {
+			// 更新基本信息
+			basicInfo.Name = name
+			basicInfo.Sex = sex
+			basicInfo.IdentificationType = identificationType
+			basicInfo.IdentificationNumber = identificationNumber
+			basicInfo.EthnicGroup = ethnicGroup
+			basicInfo.Birthday = birthday
+			basicInfo.OldName = oldName
+			basicInfo.PoliticalOutlook = politicalOutlook
+			basicInfo.EnrollmentDates = enrollmentDates
+			utils.DB_MySQL.Save(&basicInfo)
+		} else {
+			// 插入基本信息
+			basicInfo = models.UserBasicInformation{
+				Account:              account,
+				Name:                 name,
+				Sex:                  sex,
+				IdentificationType:   identificationType,
+				IdentificationNumber: identificationNumber,
+				EthnicGroup:          ethnicGroup,
+				Birthday:             birthday,
+				OldName:              oldName,
+				PoliticalOutlook:     politicalOutlook,
+				EnrollmentDates:      enrollmentDates,
+			}
+			utils.DB_MySQL.Create(&basicInfo)
+		}
+
+		// 插入或更新联系方式
 		correspondenceAddress := row[12]
 		phone := row[13]
 		email := row[14]
@@ -248,61 +257,100 @@ func ImportAndGenerateAccounts(c *gin.Context) {
 		postCode := row[16]
 		homeAddress := row[17]
 
-		contactInfo := models.ContactInformation{
-			Account:               account,
-			CorrespondenceAddress: correspondenceAddress,
-			Phone:                 phone,
-			Email:                 email,
-			Landline:              landline,
-			PostCode:              postCode,
-			HomeAddress:           homeAddress,
-		}
-		utils.DB_MySQL.Create(&contactInfo)
+		var contactInfo models.ContactInformation
+		result = utils.DB_MySQL.Where("account = ?", account).First(&contactInfo)
 
-		if chatType == models.Student {
-			academicYear := row[12]
-			academyName := row[13]
-			className := row[14]
-			professionalName := row[15]
-			status := row[16]
-			isInSchool, _ := strconv.Atoi(row[17])
-			registrationStatus := row[18]
-			educationalLevel := row[19]
-			cultivationMethod := row[20]
-			cultivationLevel, _ := strconv.Atoi(row[21])
-			studentType, _ := strconv.Atoi(row[22])
-			checkInTime := row[23]
-			registrationTime := row[24]
-			academic, _ := strconv.Atoi(row[25])
-
-			studentStatus := models.StudentStatusInformation{
-				Account:            account,
-				AcademicYear:       academicYear,
-				AcademyName:        academyName,
-				ClassName:          className,
-				ProfessionalName:   professionalName,
-				Status:             status,
-				IsInSchool:         isInSchool,
-				RegistrationStatus: registrationStatus,
-				EducationalLevel:   educationalLevel,
-				CultivationMethod:  cultivationMethod,
-				CultivationLevel:   cultivationLevel,
-				StudentType:        studentType,
-				CheckInTime:        checkInTime,
-				RegistrationTime:   registrationTime,
-				Academic:           academic,
+		if result.RowsAffected > 0 {
+			// 更新联系方式
+			contactInfo.CorrespondenceAddress = correspondenceAddress
+			contactInfo.Phone = phone
+			contactInfo.Email = email
+			contactInfo.Landline = landline
+			contactInfo.PostCode = postCode
+			contactInfo.HomeAddress = homeAddress
+			utils.DB_MySQL.Save(&contactInfo)
+		} else {
+			// 插入联系方式
+			contactInfo = models.ContactInformation{
+				Account:               account,
+				CorrespondenceAddress: correspondenceAddress,
+				Phone:                 phone,
+				Email:                 email,
+				Landline:              landline,
+				PostCode:              postCode,
+				HomeAddress:           homeAddress,
 			}
-			utils.DB_MySQL.Create(&studentStatus)
+			utils.DB_MySQL.Create(&contactInfo)
+		}
+
+		// 如果 chatType 为学生，更新或插入学籍信息
+		if chatType == models.Student {
+			academicYear := row[18]
+			academyName := row[19]
+			className := row[20]
+			professionalName := row[21]
+			status := row[22]
+			isInSchool, _ := strconv.Atoi(row[23])
+			registrationStatus := row[24]
+			educationalLevel := row[25]
+			cultivationMethod := row[26]
+			cultivationLevel, _ := strconv.Atoi(row[27])
+			studentType, _ := strconv.Atoi(row[28])
+			checkInTime := row[29]
+			registrationTime := row[30]
+			academic, _ := strconv.Atoi(row[31])
+
+			var studentStatus models.StudentStatusInformation
+			result = utils.DB_MySQL.Where("account = ?", account).First(&studentStatus)
+
+			if result.RowsAffected > 0 {
+				// 更新学籍信息
+				studentStatus.AcademicYear = academicYear
+				studentStatus.AcademyName = academyName
+				studentStatus.ClassName = className
+				studentStatus.ProfessionalName = professionalName
+				studentStatus.Status = status
+				studentStatus.IsInSchool = isInSchool
+				studentStatus.RegistrationStatus = registrationStatus
+				studentStatus.EducationalLevel = educationalLevel
+				studentStatus.CultivationMethod = cultivationMethod
+				studentStatus.CultivationLevel = cultivationLevel
+				studentStatus.StudentType = studentType
+				studentStatus.CheckInTime = checkInTime
+				studentStatus.RegistrationTime = registrationTime
+				studentStatus.Academic = academic
+				utils.DB_MySQL.Save(&studentStatus)
+			} else {
+				// 插入学籍信息
+				studentStatus = models.StudentStatusInformation{
+					Account:            account,
+					AcademicYear:       academicYear,
+					AcademyName:        academyName,
+					ClassName:          className,
+					ProfessionalName:   professionalName,
+					Status:             status,
+					IsInSchool:         isInSchool,
+					RegistrationStatus: registrationStatus,
+					EducationalLevel:   educationalLevel,
+					CultivationMethod:  cultivationMethod,
+					CultivationLevel:   cultivationLevel,
+					StudentType:        studentType,
+					CheckInTime:        checkInTime,
+					RegistrationTime:   registrationTime,
+					Academic:           academic,
+				}
+				utils.DB_MySQL.Create(&studentStatus)
+			}
 		}
 	}
 
-	c.JSON(
-		http.StatusOK, gin.H{
-            "message": "Excel 解析并生成账号成功",
-        },
-	)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Excel 解析并更新/生成账号成功",
+	})
 }
 
+
+// 获取所有信息并生成 Excel 文件
 // 获取所有信息并生成 Excel 文件
 func GetAllInfoExecl(c *gin.Context) {
 	var accounts []models.UserAccount
@@ -321,10 +369,11 @@ func GetAllInfoExecl(c *gin.Context) {
 	// 设置表头
 	headers := []string{
 		"账号", "密码", "账户类型", "姓名", "性别", "身份证号", "出生日期",
-		"民族", "证件类型", "曾用名", "政治面貌", "入学日期", "年级", "学院名称",
-		"班级名称", "专业名称", "学籍状态", "是否在校", "报到注册状态", "学历层次",
-		"培养方式", "培养层次", "学生类别", "报到时间", "注册时间", "学制", "通讯地址",
+		"民族", "证件类型", "曾用名", "政治面貌", "入学日期",  "通讯地址",
 		"手机号码", "电子邮箱", "固定电话", "邮政编码", "家庭地址",
+		"年级", "学院名称",
+		"班级名称", "专业名称", "学籍状态", "是否在校", "报到注册状态", "学历层次",
+		"培养方式", "培养层次", "学生类别", "报到时间", "注册时间", "学制",
 	}
 	for i, header := range headers {
 		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
@@ -333,56 +382,59 @@ func GetAllInfoExecl(c *gin.Context) {
 
 	// 3. 查询每个账号的详细信息并填充到 Excel 中
 	for idx, account := range accounts {
-		// 基本信息
-		var basicInfo models.UserBasicInformation
-		utils.DB_MySQL.Where("account = ?", account.Account).First(&basicInfo)
-
-		// 学籍信息
-		var statusInfo models.StudentStatusInformation
-		utils.DB_MySQL.Where("account = ?", account.Account).First(&statusInfo)
-
-		// 联系方式
-		var contactInfo models.ContactInformation
-		utils.DB_MySQL.Where("account = ?", account.Account).First(&contactInfo)
-
-		// 填入数据
 		row := idx + 2
+
+		// 填入账号数据
 		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), account.Account)
 		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), account.Password)
 		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), account.ChatType)
-		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), basicInfo.Name)
-		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), basicInfo.Sex)
-		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), basicInfo.IdentificationNumber)
-		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), basicInfo.Birthday)
-		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), basicInfo.EthnicGroup)
-		f.SetCellValue(sheet, fmt.Sprintf("I%d", row), basicInfo.IdentificationType)
-		f.SetCellValue(sheet, fmt.Sprintf("J%d", row), basicInfo.OldName)
-		f.SetCellValue(sheet, fmt.Sprintf("K%d", row), basicInfo.PoliticalOutlook)
-		f.SetCellValue(sheet, fmt.Sprintf("L%d", row), basicInfo.EnrollmentDates)
 
-		// 学籍信息
-		f.SetCellValue(sheet, fmt.Sprintf("M%d", row), statusInfo.AcademicYear)
-		f.SetCellValue(sheet, fmt.Sprintf("N%d", row), statusInfo.AcademyName)
-		f.SetCellValue(sheet, fmt.Sprintf("O%d", row), statusInfo.ClassName)
-		f.SetCellValue(sheet, fmt.Sprintf("P%d", row), statusInfo.ProfessionalName)
-		f.SetCellValue(sheet, fmt.Sprintf("Q%d", row), statusInfo.Status)
-		f.SetCellValue(sheet, fmt.Sprintf("R%d", row), statusInfo.IsInSchool)
-		f.SetCellValue(sheet, fmt.Sprintf("S%d", row), statusInfo.RegistrationStatus)
-		f.SetCellValue(sheet, fmt.Sprintf("T%d", row), statusInfo.EducationalLevel)
-		f.SetCellValue(sheet, fmt.Sprintf("U%d", row), statusInfo.CultivationMethod)
-		f.SetCellValue(sheet, fmt.Sprintf("V%d", row), statusInfo.CultivationLevel)
-		f.SetCellValue(sheet, fmt.Sprintf("W%d", row), statusInfo.StudentType)
-		f.SetCellValue(sheet, fmt.Sprintf("X%d", row), statusInfo.CheckInTime)
-		f.SetCellValue(sheet, fmt.Sprintf("Y%d", row), statusInfo.RegistrationTime)
-		f.SetCellValue(sheet, fmt.Sprintf("Z%d", row), statusInfo.Academic)
+		// 基本信息
+		var basicInfo models.UserBasicInformation
+		if err := utils.DB_MySQL.Where("account = ?", account.Account).First(&basicInfo).Error; err == nil {
+			// 填入基本信息
+			f.SetCellValue(sheet, fmt.Sprintf("D%d", row), basicInfo.Name)
+			f.SetCellValue(sheet, fmt.Sprintf("E%d", row), basicInfo.Sex)
+			f.SetCellValue(sheet, fmt.Sprintf("F%d", row), basicInfo.IdentificationNumber)
+			f.SetCellValue(sheet, fmt.Sprintf("G%d", row), basicInfo.Birthday)
+			f.SetCellValue(sheet, fmt.Sprintf("H%d", row), basicInfo.EthnicGroup)
+			f.SetCellValue(sheet, fmt.Sprintf("I%d", row), basicInfo.IdentificationType)
+			f.SetCellValue(sheet, fmt.Sprintf("J%d", row), basicInfo.OldName)
+			f.SetCellValue(sheet, fmt.Sprintf("K%d", row), basicInfo.PoliticalOutlook)
+			f.SetCellValue(sheet, fmt.Sprintf("L%d", row), basicInfo.EnrollmentDates)
+		}
 
 		// 联系方式
-		f.SetCellValue(sheet, fmt.Sprintf("AA%d", row), contactInfo.CorrespondenceAddress)
-		f.SetCellValue(sheet, fmt.Sprintf("AB%d", row), contactInfo.Phone)
-		f.SetCellValue(sheet, fmt.Sprintf("AC%d", row), contactInfo.Email)
-		f.SetCellValue(sheet, fmt.Sprintf("AD%d", row), contactInfo.Landline)
-		f.SetCellValue(sheet, fmt.Sprintf("AE%d", row), contactInfo.PostCode)
-		f.SetCellValue(sheet, fmt.Sprintf("AF%d", row), contactInfo.HomeAddress)
+		var contactInfo models.ContactInformation
+		if err := utils.DB_MySQL.Where("account = ?", account.Account).First(&contactInfo).Error; err == nil {
+			// 填入联系方式
+			f.SetCellValue(sheet, fmt.Sprintf("M%d", row), contactInfo.CorrespondenceAddress)
+			f.SetCellValue(sheet, fmt.Sprintf("N%d", row), contactInfo.Phone)
+			f.SetCellValue(sheet, fmt.Sprintf("O%d", row), contactInfo.Email)
+			f.SetCellValue(sheet, fmt.Sprintf("P%d", row), contactInfo.Landline)
+			f.SetCellValue(sheet, fmt.Sprintf("Q%d", row), contactInfo.PostCode)
+			f.SetCellValue(sheet, fmt.Sprintf("R%d", row), contactInfo.HomeAddress)
+		}
+
+		// 学籍信息
+		var statusInfo models.StudentStatusInformation
+		if err := utils.DB_MySQL.Where("account = ?", account.Account).First(&statusInfo).Error; err == nil {
+			// 填入学籍信息
+			f.SetCellValue(sheet, fmt.Sprintf("S%d", row), statusInfo.AcademicYear)
+			f.SetCellValue(sheet, fmt.Sprintf("T%d", row), statusInfo.AcademyName)
+			f.SetCellValue(sheet, fmt.Sprintf("U%d", row), statusInfo.ClassName)
+			f.SetCellValue(sheet, fmt.Sprintf("V%d", row), statusInfo.ProfessionalName)
+			f.SetCellValue(sheet, fmt.Sprintf("W%d", row), statusInfo.Status)
+			f.SetCellValue(sheet, fmt.Sprintf("X%d", row), statusInfo.IsInSchool)
+			f.SetCellValue(sheet, fmt.Sprintf("Y%d", row), statusInfo.RegistrationStatus)
+			f.SetCellValue(sheet, fmt.Sprintf("Z%d", row), statusInfo.EducationalLevel)
+			f.SetCellValue(sheet, fmt.Sprintf("AA%d", row), statusInfo.CultivationMethod)
+			f.SetCellValue(sheet, fmt.Sprintf("AB%d", row), statusInfo.CultivationLevel)
+			f.SetCellValue(sheet, fmt.Sprintf("AC%d", row), statusInfo.StudentType)
+			f.SetCellValue(sheet, fmt.Sprintf("AD%d", row), statusInfo.CheckInTime)
+			f.SetCellValue(sheet, fmt.Sprintf("AE%d", row), statusInfo.RegistrationTime)
+			f.SetCellValue(sheet, fmt.Sprintf("AF%d", row), statusInfo.Academic)
+		}
 	}
 
 	// 4. 生成文件并返回给前端
@@ -393,6 +445,7 @@ func GetAllInfoExecl(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 }
+
 
 
 
