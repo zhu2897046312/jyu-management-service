@@ -11,10 +11,16 @@ import (
 )
 
 type UserCourse struct {
-	ID          int    `gorm:"primaryKey;autoIncrement" json:"id"`   // 自增主键
-	Account     string `gorm:"not null" json:"account"`              // 学号
-	CourseCode  string `gorm:"not null" json:"course_code"`          // 课程代码
-	CourseGrade string `json:"course_grade"`         // 成绩
+	ID          int    `gorm:"primaryKey;autoIncrement" json:"id"` // 自增主键
+	Account     string `gorm:"not null" json:"account"`            // 学号
+	CourseCode  string `gorm:"not null" json:"course_code"`        // 课程代码
+	CourseGrade string `json:"course_grade"`                       // 成绩
+}
+
+type TeacherCourse struct {
+	ID          int    `gorm:"primaryKey;autoIncrement" json:"id"` // 自增主键
+	Account     string `gorm:"not null" json:"account"`            // 账号
+	CourseCode  string `gorm:"not null" json:"course_code"`        // 课程代码
 }
 
 func init() {

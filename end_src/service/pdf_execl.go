@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"gorm.io/gorm"
 	// "os"
 	// "io"
 	"github.com/gin-gonic/gin"
@@ -349,8 +350,6 @@ func ImportAndGenerateAccounts(c *gin.Context) {
 	})
 }
 
-
-// 获取所有信息并生成 Excel 文件
 // 获取所有信息并生成 Excel 文件
 func GetAllInfoExecl(c *gin.Context) {
 	var accounts []models.UserAccount
@@ -444,6 +443,197 @@ func GetAllInfoExecl(c *gin.Context) {
 	if err := f.Write(c.Writer); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
+}
+
+// execl 生成课程信息文档
+func GenerateCourseExcel(c *gin.Context) {
+	f := excelize.NewFile()
+
+	// 创建“Students” Sheet 并写入表头
+	index, err := f.NewSheet("Sheet1")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 公共表头：账号信息、基本信息、联系方式
+	commonHeaders := []string{
+		"课程代码","课程名称","教师账号","教师名称",
+		"上课时间（节次:星期:持续周次）","上课地点",
+		"学分","教学模式","年级","学期",
+		"开课学院","课程归属","课程类别","课程性质",
+		"教学班名称","总人数","已选人数",
+	}
+
+	// 写入学生表头
+	for i, header := range commonHeaders {
+		column := getExcelColumnName(i + 1) // i 从 0 开始，所以要加 1
+		f.SetCellValue("Sheet1", column+"1", header)
+	}
+	f.SetActiveSheet(index)
+
+	// 设置响应头，返回文件流给前端
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Disposition", "attachment; filename=\"template.xlsx\"")
+	c.Header("File-Name", "template.xlsx")
+	if err := f.Write(c.Writer); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "无法生成 Excel 文件",
+		})
+		return
+	}
+}
+
+func GetCoursesInfoExecl(c *gin.Context) {
+	var accounts []models.CourseInformation
+
+	// 1. 查询所有账号
+	if err := utils.DB_MySQL.Find(&accounts).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取账号失败"})
+		return
+	}
+
+	// 2. 创建 Excel 文件
+	f := excelize.NewFile()
+	sheet := "Sheet1"
+	f.NewSheet(sheet)
+
+	// 设置表头
+	headers := []string{
+		"课程代码","课程名称","教师账号","教师名称",
+		"上课时间（节次:星期:持续周次）","上课地点",
+		"学分","教学模式","年级","学期",
+		"开课学院","课程归属","课程类别","课程性质",
+		"教学班名称","总人数","已选人数",
+	}
+	for i, header := range headers {
+		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
+		f.SetCellValue(sheet, cell, header)
+	}
+
+	// 3. 查询每个账号的详细信息并填充到 Excel 中
+	for idx, account := range accounts {
+		row := idx + 2
+
+		// 填入账号数据
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), account.CourseCode)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), account.CourseName)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), account.Account)
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), account.TeacherName)
+		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), account.ClassTime)
+		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), account.ClassAddress)
+		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), account.Credits)
+		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), account.TeachingMode)
+		f.SetCellValue(sheet, fmt.Sprintf("I%d", row), account.AcademicYear)
+		f.SetCellValue(sheet, fmt.Sprintf("J%d", row), account.Semester)
+		f.SetCellValue(sheet, fmt.Sprintf("K%d", row), account.CommencementAcademy)
+		f.SetCellValue(sheet, fmt.Sprintf("L%d", row), account.CourseAffiliation)
+		f.SetCellValue(sheet, fmt.Sprintf("M%d", row), account.CourseType)
+		f.SetCellValue(sheet, fmt.Sprintf("N%d", row), account.CourseNature)
+		f.SetCellValue(sheet, fmt.Sprintf("O%d", row), account.ClassName)
+		f.SetCellValue(sheet, fmt.Sprintf("P%d", row), account.MaxStudentNumber)
+		f.SetCellValue(sheet, fmt.Sprintf("Q%d", row), account.ChoosedNumber)
+	}
+
+	// 4. 生成文件并返回给前端
+	// 设置 Excel 输出流
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Content-Disposition", "attachment; filename=all.xlsx")
+	if err := f.Write(c.Writer); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+}
+
+// 解析 Excel 文件并处理课程信息
+func ParseCourseExcel(c *gin.Context) {
+	// 1. 获取上传的文件
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无法获取文件"})
+		return
+	}
+
+	// 2. 打开上传的文件
+	f, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法打开文件"})
+		return
+	}
+	defer f.Close()
+
+	// 3. 使用 excelize.OpenReader 读取文件内容
+	excelFile, err := excelize.OpenReader(f)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法解析 Excel 文件"})
+		return
+	}
+
+	// 获取所有行数据
+	rows, err := excelFile.GetRows("Sheet1")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法读取 Excel 行数据"})
+		return
+	}
+
+	// 遍历行数据，更新或插入课程信息
+	for _, row := range rows[1:] { // 跳过表头
+		if len(row) < 15 { // 确保行数据完整
+			continue
+		}
+
+		course := models.CourseInformation{
+			CourseCode:          row[0],
+			CourseName:          row[1],
+			Account:             row[2],
+			TeacherName:         row[3],
+			ClassTime:           row[4],
+			ClassAddress:        row[5],
+			Credits:             parseFloat(row[6]),
+			TeachingMode:        parseInt(row[7]),
+			AcademicYear:        row[8],
+			Semester:            parseInt(row[9]),
+			CommencementAcademy: row[10],
+			CourseAffiliation:   row[11],
+			CourseType:          parseInt(row[12]),
+			CourseNature:        parseInt(row[13]),
+			ClassName:           row[14],
+			MaxStudentNumber:    parseInt(row[15]),
+		}
+
+		// 检查数据库中是否已存在该课程
+		var existingCourse models.CourseInformation
+		if err := utils.DB_MySQL.Where("course_code = ?", course.CourseCode).First(&existingCourse).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				// 课程不存在，插入新记录
+				if err := utils.DB_MySQL.Create(&course).Error; err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("插入课程 %s 失败: %v", course.CourseCode, err)})
+					return
+				}
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "数据库查询失败"})
+				return
+			}
+		} else {
+			// 课程已存在，更新记录
+			if err := utils.DB_MySQL.Model(&existingCourse).Updates(course).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("更新课程 %s 失败: %v", course.CourseCode, err)})
+				return
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "课程信息处理完成"})
+}
+
+// 辅助函数：将字符串转换为整数
+func parseInt(s string) int {
+	value, _ := strconv.Atoi(s)
+	return value
+}
+
+// 辅助函数：将字符串转换为浮点数
+func parseFloat(s string) float32 {
+	value, _ := strconv.ParseFloat(s, 32)
+	return float32(value)
 }
 
 

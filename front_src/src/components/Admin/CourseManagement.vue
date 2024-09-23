@@ -1,9 +1,24 @@
 <template>
+    <el-button type="primary" @click="downloadTemplate">下载Excel模板</el-button>
+    <el-button type="primary" @click="download">下载已有的所有课程信息</el-button>
+    <el-upload
+      class="upload-demo"
+      drag
+      action="http://localhost:8081/admin/uploadCourseExcel"
+      :on-success="handleUploadSuccess"
+      :show-file-list="false"
+    >
+      <i class="el-icon-upload"></i>
+      <div class="el-upload__text">拖拽文件或点击上传</div>
+      <div class="el-upload__text">填写好模板内容上传解析</div>
+      <div class="el-upload__tip" slot="tip">上传Excel文件</div>
+    </el-upload>
     <div class="course-management">
       <el-button type="primary" @click="showAddCourseDialog">添加课程</el-button>
       <el-table :data="courses" stripe>
         <el-table-column prop="course_code" label="课程代码" width="150"></el-table-column>
         <el-table-column prop="course_name" label="课程名称" width="200"></el-table-column>
+        <el-table-column prop="account" label="教师名称" width="150"></el-table-column>
         <el-table-column prop="teacher_name" label="教师名称" width="150"></el-table-column>
         <el-table-column prop="credits" label="学分" width="100"></el-table-column>
         <el-table-column label="操作" width="180">
@@ -95,6 +110,7 @@
         form: {
           course_code: '',
           course_name: '',
+          account: '',
           teacher_name: '',
           credits: null,
           academic_year: '',
@@ -135,6 +151,7 @@
         this.form = {
           course_code: '',
           course_name: '',
+          account: '',
           teacher_name: '',
           credits: null,
           academic_year: '',
@@ -183,6 +200,36 @@
               console.error('Failed to submit form:', error);
           }
       },
+      downloadTemplate() {
+      axios({
+        url: 'http://localhost:8081/courses_execl', // 后端生成模板的接口
+        method: 'GET',
+        responseType: 'blob' // 确保返回的是文件流
+      }).then((response) => {
+        const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'user_account_template.xlsx'; // 下载的文件名
+        link.click();
+      }).catch((error) => {
+        console.error('下载模板失败', error);
+      });
+    },
+    download() {
+      axios({
+        url: 'http://localhost:8081/all_courses_execl', // 后端生成模板的接口
+        method: 'GET',
+        responseType: 'blob' // 确保返回的是文件流
+      }).then((response) => {
+        const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'all.xlsx'; // 下载的文件名
+        link.click();
+      }).catch((error) => {
+        console.error('下载模板失败', error);
+      });
+    },
       cancelForm() {
         this.dialogVisible = false;
       },

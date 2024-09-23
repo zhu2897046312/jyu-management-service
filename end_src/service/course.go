@@ -6,7 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"gorm.io/gorm"
 )
+/**
+	admin
+*/
 
 // GetCourses 获取课程列表（支持分页）
 func GetCourses(c *gin.Context) {
@@ -148,3 +152,90 @@ func DeleteCourses(c *gin.Context) {
 		"course": course,
 	})
 }
+
+/**
+	teacher -> course
+*/
+
+func GetTeacherCourse(c *gin.Context) {
+	account_teacher := c.Query("account")
+
+	// 根据教师名称查找课程
+    var courses []models.CourseInformation
+    if err := utils.DB_MySQL.Where("accountaccount = ?", account_teacher).Find(&courses).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "status": "error", 
+            "message": "查询课程失败", 
+            "error": err.Error(),
+        })
+        return
+    }
+
+	// 成功返回课程列表
+    c.JSON(http.StatusOK, gin.H{
+        "status": "success", 
+        "Courses": courses,
+    })
+}
+
+func ModifinedGrades(c *gin.Context) {
+	var userCourse models.UserCourse
+
+    // 解析请求体中的 JSON 数据
+    if err := c.ShouldBindJSON(&userCourse); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "status": "error",
+            "message": "请求数据格式错误",
+            "error": err.Error(),
+        })
+        return
+    }
+
+    // 确保 account 和 course_code 存在
+    if userCourse.Account == "" || userCourse.CourseCode == "" {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "status": "error",
+            "message": "学号和课程代码不能为空",
+        })
+        return
+    }
+
+    // 查找该学生是否已经选了该课程
+    var existingRecord models.UserCourse
+    if err := utils.DB_MySQL.Where("account = ? AND course_code = ?", userCourse.Account, userCourse.CourseCode).First(&existingRecord).Error; err != nil {
+        // 如果找不到记录，返回错误信息
+        if err == gorm.ErrRecordNotFound {
+            c.JSON(http.StatusNotFound, gin.H{
+                "status": "error",
+                "message": "未找到该学生的课程记录",
+            })
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{
+                "status": "error",
+                "message": "查询学生课程记录失败",
+                "error": err.Error(),
+            })
+        }
+        return
+    }
+
+    // 更新成绩信息
+    existingRecord.CourseGrade = userCourse.CourseGrade
+    if err := utils.DB_MySQL.Save(&existingRecord).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "status": "error",
+            "message": "更新成绩失败",
+            "error": err.Error(),
+        })
+        return
+    }
+
+    // 成功返回结果
+    c.JSON(http.StatusOK, gin.H{
+        "status": "success",
+        "message": "成绩更新成功",
+        "data": existingRecord,
+    })
+}
+
+  

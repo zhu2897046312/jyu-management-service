@@ -14,6 +14,8 @@ import (
 // 课程信息
 type CourseInformation struct {
 	CourseCode          string  `gorm:"primaryKey;not null;" json:"course_code"` // 课程代码
+	Account             string  `json:"account"`                                 // 教师账号
+	TeacherName         string  `json:"teacher_name"`                            // 教师名称
 	AcademicYear        string  `json:"academic_year"`                           // 年级
 	Semester            int     `json:"semester"`                                // 学期
 	CourseName          string  `json:"course_name"`                             // 课程名称
@@ -23,7 +25,6 @@ type CourseInformation struct {
 	CourseNature        int     `json:"course_nature"`                           // 课程性质
 	Credits             float32 `json:"credits"`                                 // 学分
 	ClassName           string  `json:"class_name"`                              // 教学班名称
-	TeacherName         string  `json:"teacher_name"`                            // 教师名称
 	ClassTime           string  `json:"class_time"`                              // 上课时间（节次:星期:持续周次）
 	ClassAddress        string  `json:"class_address"`                           // 上课地点
 	MaxStudentNumber    int     `json:"max_student_number"`                      // 人数
