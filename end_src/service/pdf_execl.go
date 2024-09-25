@@ -636,6 +636,119 @@ func parseFloat(s string) float32 {
 	return float32(value)
 }
 
+func GenerateStudentInfoExcel(c *gin.Context) {
+	courseCode := c.Query("course_code")
+
+	var userCourses []models.UserCourse
+    // 根据 course_code 查询 UserCourse
+    if err := utils.DB_MySQL.Where("course_code = ?", courseCode).Find(&userCourses).Error; err != nil {
+        return 
+    }
+
+    // 创建 Excel 文件
+    f := excelize.NewFile()
+    sheet := "Sheet1"
+    f.NewSheet(sheet)
+
+    // 设置表头
+	headers := []string{
+		"课程代码","学号","专业名称","班级名称","成绩",
+	}
+	for i, header := range headers {
+		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
+		f.SetCellValue(sheet, cell, header)
+	}
+
+	// 3. 查询每个账号的详细信息并填充到 Excel 中
+	for idx, account := range userCourses {
+		row := idx + 2
+
+		// 查询学生个人信息
+		var student models.StudentStatusInformation
+		if err := utils.DB_MySQL.Where("account = ?", account.Account).Find(&student).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "查询学生信息失败"})
+			return
+		}
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), account.CourseCode)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), account.Account)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), student.ProfessionalName)
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), student.ClassName)
+
+		if account.CourseGrade != "" {
+			f.SetCellValue(sheet, fmt.Sprintf("E%d", row), account.CourseGrade)
+		}
+	}
+
+	// 4. 生成文件并返回给前端
+	// 设置 Excel 输出流
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Content-Disposition", "attachment; filename=all.xlsx")
+	if err := f.Write(c.Writer); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+}
+
+// 解析 Excel 文件 修改成绩
+func UploadStudentScores(c *gin.Context) {
+    // 获取上传的文件
+    file, err := c.FormFile("file")
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "文件获取失败"})
+        return
+    }
+
+    // 打开上传的 Excel 文件
+    excelFile, err := file.Open()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "打开文件失败"})
+        return
+    }
+    defer excelFile.Close()
+
+    // 读取 Excel 文件
+    f, err := excelize.OpenReader(excelFile)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "解析 Excel 文件失败"})
+        return
+    }
+
+    // 获取第一个工作表的名称
+    sheetName := f.GetSheetName(0)
+
+    // 读取表格数据
+    rows, err := f.GetRows(sheetName)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "读取行数据失败"})
+        return
+    }
+
+    // 跳过表头，从第二行开始
+    for i, row := range rows {
+        if i == 0 {
+            continue // 跳过表头
+        }
+
+        courseCode := row[0]      // 课程代码
+        account := row[1]         // 学号
+        courseGrade := row[4]     // 成绩
+
+        // 更新数据库
+        var userCourse models.UserCourse
+        if err := utils.DB_MySQL.Where("account = ? AND course_code = ?", account, courseCode).First(&userCourse).Error; err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "更新成绩失败: 学生信息不存在"})
+            return
+        }
+
+        // 更新成绩
+        userCourse.CourseGrade = courseGrade
+        if err := utils.DB_MySQL.Save(&userCourse).Error; err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "更新成绩失败"})
+            return
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "成绩上传成功"})
+}
 
 
 

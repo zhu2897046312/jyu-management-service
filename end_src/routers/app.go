@@ -55,6 +55,10 @@ func Router() *gin.Engine {
     r.POST("/admin/AddStudentStatusInfo", service.AddStudentStatusInfo)
     r.DELETE("/admin/DeleteStudentStatusInfo/:account", service.DeleteStudentStatusInfo)
 
+	// teacher 
+	r.GET("teacher/GetTeacherCourses", service.GetTeacherCourse)
+	r.PUT("teacher/ModifinedGrades", service.ModifinedGrades)
+
 	r.GET("/admin/GetUserCourseInfomation", service.GetUserCourseInformationHandler)
 	r.GET("/admin/GetUserInformation", service.GetUserInformationHandler)
 	r.GET("/admin/GetContactInformation", service.GetContactInformationHandler)
@@ -66,6 +70,9 @@ func Router() *gin.Engine {
 	r.GET("/generate_excel_template", service.GenerateExcelTemplate)
 	r.POST("/admin/uploadExcel", service.ImportAndGenerateAccounts)
 	r.GET("/all_execl",service.GetAllInfoExecl)
+
+	r.GET("/teacher/grades_execl",service.GenerateStudentInfoExcel)
+	r.POST("/teacher/uploadExcel", service.UploadStudentScores)
 
 	r.GET("/courses_execl",service.GenerateCourseExcel)
 	r.POST("/admin/uploadCourseExcel", service.ParseCourseExcel)

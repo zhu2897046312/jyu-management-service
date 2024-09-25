@@ -162,7 +162,7 @@ func GetTeacherCourse(c *gin.Context) {
 
 	// 根据教师名称查找课程
     var courses []models.CourseInformation
-    if err := utils.DB_MySQL.Where("accountaccount = ?", account_teacher).Find(&courses).Error; err != nil {
+    if err := utils.DB_MySQL.Where("account = ?", account_teacher).Find(&courses).Error; err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{
             "status": "error", 
             "message": "查询课程失败", 

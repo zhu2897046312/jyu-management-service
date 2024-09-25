@@ -13,6 +13,9 @@ import Login from '@/views/Login.vue';
 import EnrollCourse from '@/views/EnrollCourse.vue'; 
 import PrintfCourse from '@/views/PrintfCourse.vue'; 
 import UserInformation from '@/views/UserInformation.vue';
+import BasicInfo from '@/components/UserInformation/BasicInfo.vue';
+
+
 import PrintGrades from '@/views/PrintGrades.vue';
 import GradeInfo from '../components/UserInformation/GradeInfo.vue';  
 
@@ -83,6 +86,13 @@ const routes = [
     path: '/userInformation',
     name: 'UserInformation',
     component: UserInformation,
+    children: [
+      {
+        path: 'basic-information',
+        name: 'BasicInfo',
+        component: BasicInfo,
+      },
+    ]
   },
   {
     path: '/gradeInformation',

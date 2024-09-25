@@ -177,6 +177,7 @@
         try {
           await axios.delete(`http://localhost:8081/admin/DeleteCourses/${course_code}`);
           this.fetchCourses(this.currentPage);
+          this.$message.success("删除成功！");
         } catch (error) {
           console.error('Failed to delete course:', error);
         }
@@ -196,9 +197,14 @@
               
               this.fetchCourses(this.currentPage);  // 刷新课程列表
               this.dialogVisible = false;
+              this.$message.success("修改成功！");
           } catch (error) {
               console.error('Failed to submit form:', error);
           }
+      },
+      handleUploadSuccess(response) {
+        // 显示成功消息提示框
+        this.$message.success('上传成功！');
       },
       downloadTemplate() {
       axios({
@@ -211,6 +217,7 @@
         link.href = URL.createObjectURL(blob);
         link.download = 'user_account_template.xlsx'; // 下载的文件名
         link.click();
+        this.$message.success('下载完成！');
       }).catch((error) => {
         console.error('下载模板失败', error);
       });
@@ -226,6 +233,7 @@
         link.href = URL.createObjectURL(blob);
         link.download = 'all.xlsx'; // 下载的文件名
         link.click();
+        this.$message.success('下载完成！');
       }).catch((error) => {
         console.error('下载模板失败', error);
       });
